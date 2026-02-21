@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, Response
 from pydantic import BaseModel
-import requests
+from groq import Groq
 import json
 import os
 import uuid
@@ -12,21 +12,33 @@ from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any, Tuple
 
 APP_TITLE = "Devset IA 👾"
-OLLAMA_CHAT_URL = os.getenv("OLLAMA_CHAT_URL", "http://localhost:11434/api/chat")
-OLLAMA_TAGS_URL = os.getenv("OLLAMA_TAGS_URL", "http://localhost:11434/api/tags")
 
 # =============================
-# MODELOS
+# GROQ CONFIG
 # =============================
-MODEL_DEFAULT_TEXT = os.getenv("MODEL_DEFAULT_TEXT", "llama3.2:3b")
-MODEL_DEFAULT_VISION = os.getenv("MODEL_DEFAULT_VISION", "llava:7b")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
 
+# Modelos Groq (você pode trocar via env ou pela UI)
+MODEL_DEFAULT_TEXT = os.getenv("MODEL_DEFAULT_TEXT", "llama-3.3-70b-versatile").strip()
+
+# Groq (chat) não usa "images" do jeito que o Ollama usa.
+# Se quiser visão, é outro fluxo/modelo/endpoint. Por agora, a gente bloqueia.
+MODEL_DEFAULT_VISION = os.getenv("MODEL_DEFAULT_VISION", "").strip()
+
+# Mapa opcional pra “alias” da sua UI
 MODEL_MAP: Dict[str, str] = {
-    "ollama:7b": "llama3.2:3b",
-    "llama3.1:8b": "llama3.1:8b",
-    "mistral:7b": "mistral:7b",
-    "qwen2.5:7b": "qwen2.5:7b",
+    "groq:llama-3.3-70b-versatile": "llama-3.3-70b-versatile",
+    "groq:llama-3.1-70b": "llama-3.1-70b-versatile",
+    "groq:llama-3.1-8b": "llama-3.1-8b-instant",
+    "groq:mixtral-8x7b": "mixtral-8x7b-32768",
+    "groq:gemma2-9b": "gemma2-9b-it",
 }
+
+# Lista “base” (pra UI) caso você não queira bater em endpoint nenhum
+GROQ_MODELS_FALLBACK = list(dict.fromkeys([MODEL_DEFAULT_TEXT] + list(MODEL_MAP.values())))
+
+# Client
+groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
 # =============================
 # PATHS
@@ -53,17 +65,11 @@ Regras:
 """.strip()
 
 # =============================
-# CORS (✅ CORRETO)
-# - Se precisar cookies/auth -> allow_credentials=True e origins explícitos
-# - Se NÃO precisar cookies/auth -> allow_credentials=False e origins pode ser "*"
+# CORS
 # =============================
-# Seu domínio atual (sem barra no final também funciona)
 WORKER_ORIGIN = "https://steep-disk-3924.guilhermexp0708.workers.dev"
-
-# Se quiser manter credenciais (mais seguro pra futuro login):
 ALLOW_CREDENTIALS = True
 
-# Lista explícita (pode adicionar outros domínios/locais)
 ALLOWED_ORIGINS = [
     WORKER_ORIGIN,
     "http://localhost:5500",
@@ -128,19 +134,13 @@ def sse_data(text: str) -> str:
     lines = (text or "").splitlines() or [""]
     return "".join([f"data: {ln}\n" for ln in lines]) + "\n"
 
-def get_ollama_models() -> List[str]:
-    try:
-        r = requests.get(OLLAMA_TAGS_URL, timeout=5)
-        r.raise_for_status()
-        data = r.json()
-        models = []
-        for m in data.get("models", []):
-            name = m.get("name")
-            if name:
-                models.append(name)
-        return models
-    except:
-        return []
+def get_groq_models_ui() -> List[str]:
+    # Sem “listar modelos” via API (não é necessário e pode mudar).
+    # Mantém uma lista previsível pra sua UI.
+    out = GROQ_MODELS_FALLBACK[:]
+    # também expõe aliases, se quiser:
+    out_alias = list(MODEL_MAP.keys())
+    return out + out_alias
 
 # =============================
 # MEMORY v2 (perfil + por chat)
@@ -237,14 +237,20 @@ Regras:
 - Se não houver nada novo, mantenha os campos atuais.
 """.strip()
 
-def ollama_json_call(model: str, messages: List[Dict[str, Any]], timeout: int = 120) -> Dict[str, Any]:
-    payload = {"model": model, "messages": messages, "stream": False}
-    r = requests.post(OLLAMA_CHAT_URL, json=payload, timeout=timeout)
-    r.raise_for_status()
-    j = r.json()
-    content = (j.get("message") or {}).get("content", "")
-    content = content.strip()
+def groq_json_call(model: str, messages: List[Dict[str, Any]], timeout: int = 120) -> Dict[str, Any]:
+    if not groq_client:
+        return {}
+    # Groq SDK não expõe timeout “per request” do mesmo jeito do requests;
+    # em caso de rede ruim, isso pode demorar. Em Railway normalmente ok.
+    completion = groq_client.chat.completions.create(
+        model=model,
+        messages=messages,
+        temperature=0.2,
+        stream=False,
+    )
+    content = (completion.choices[0].message.content or "").strip()
 
+    # Tenta parsear JSON direto; se vier lixo, tenta extrair {...}
     try:
         return json.loads(content)
     except:
@@ -288,7 +294,7 @@ def update_intelligent_memory(
 
     data = {}
     try:
-        data = ollama_json_call(model_for_extractor, extractor_messages, timeout=120)
+        data = groq_json_call(model_for_extractor, extractor_messages, timeout=120)
     except:
         data = {}
 
@@ -384,6 +390,7 @@ def build_messages(
             if h.get("role") in ("user", "assistant") and isinstance(h.get("content"), str):
                 messages.append({"role": h["role"], "content": h["content"]})
 
+    # Se vier imagem anexada, a gente marca use_vision=True e trata na rota (bloqueia por enquanto)
     file_ids = file_ids or []
     images_b64: List[str] = []
     for fid in file_ids:
@@ -394,32 +401,40 @@ def build_messages(
             images_b64.append(image_to_b64(meta["path"]))
 
     if images_b64:
-        messages.append({"role": "user", "content": user_text, "images": images_b64})
+        # Não adiciona "images" no payload do Groq, porque isso quebra.
+        # Só sinaliza que tem imagem.
+        messages.append({"role": "user", "content": user_text})
         return messages, True
 
     messages.append({"role": "user", "content": user_text})
     return messages, False
 
 # =============================
-# OLLAMA STREAM (SSE)
+# GROQ STREAM (SSE)
 # =============================
-def stream_ollama(messages: List[Dict[str, Any]], model_name: str):
-    payload = {"model": model_name, "messages": messages, "stream": True}
+def stream_groq(messages: List[Dict[str, Any]], model_name: str):
+    if not groq_client:
+        yield sse_data("Erro 👾: GROQ_API_KEY não configurada no Railway.")
+        yield "event: done\ndata: [DONE]\n\n"
+        return
+
     try:
-        with requests.post(OLLAMA_CHAT_URL, json=payload, stream=True, timeout=240) as r:
-            r.raise_for_status()
-            for line in r.iter_lines(decode_unicode=True):
-                if not line:
-                    continue
-                try:
-                    obj = json.loads(line)
-                except Exception:
-                    continue
-                if obj.get("done"):
-                    break
-                chunk = (obj.get("message") or {}).get("content", "")
-                if chunk:
-                    yield sse_data(chunk)
+        stream = groq_client.chat.completions.create(
+            model=model_name,
+            messages=messages,
+            temperature=0.6,
+            stream=True,
+        )
+
+        for chunk in stream:
+            # chunk.choices[0].delta.content em streaming
+            delta = chunk.choices[0].delta
+            if not delta:
+                continue
+            content = getattr(delta, "content", None)
+            if content:
+                yield sse_data(content)
+
     except Exception as e:
         yield sse_data(f"Erro 👾: {str(e)}")
 
@@ -443,12 +458,11 @@ class ChatInput(BaseModel):
 # =============================
 @app.get("/")
 def home():
-    real_models = get_ollama_models()
-    models_ui = real_models if real_models else list(MODEL_MAP.keys())
+    models_ui = get_groq_models_ui()
     return {
         "status": "Devset API online 🚀",
+        "engine": "groq",
         "model_default_text": MODEL_DEFAULT_TEXT,
-        "model_default_vision": MODEL_DEFAULT_VISION,
         "models_available_ui": models_ui,
         "stream": "/chat_stream",
         "upload": "/upload",
@@ -458,9 +472,12 @@ def home():
             "allow_credentials": ALLOW_CREDENTIALS,
             "allowed_origins": ALLOWED_ORIGINS if ALLOW_CREDENTIALS else ["*"],
         },
-        "ollama": {
-            "chat_url": OLLAMA_CHAT_URL,
-            "tags_url": OLLAMA_TAGS_URL,
+        "groq": {
+            "api_key_configured": bool(GROQ_API_KEY),
+        },
+        "vision": {
+            "enabled": False,
+            "note": "Envio de imagens via Groq (chat) não está habilitado neste backend ainda."
         }
     }
 
@@ -515,17 +532,23 @@ def chat_stream(payload: ChatInput):
         file_ids=payload.file_ids
     )
 
-    model_to_use = MODEL_DEFAULT_VISION if use_vision else chosen_model
+    # Bloqueia visão por enquanto
+    if use_vision:
+        def gen_no_vision():
+            yield sse_data("[meta] chat_id=" + chat_id)
+            yield sse_data("Erro 👾: envio de imagem ainda não está habilitado no modo Groq.")
+            yield "event: done\ndata: [DONE]\n\n"
+        return StreamingResponse(gen_no_vision(), media_type="text/event-stream")
+
     full_response: List[str] = []
 
     def generator():
         # meta opcional
         yield sse_data(f"[meta] chat_id={chat_id}")
 
-        for sse in stream_ollama(messages, model_to_use):
-            # guarda apenas linhas data: (sem "data: ")
+        for sse in stream_groq(messages, chosen_model or MODEL_DEFAULT_TEXT):
             if sse.startswith("data: "):
-                full_response.append(sse[6:])  # NÃO strip
+                full_response.append(sse[6:])  # mantém sem strip
             yield sse
 
         assistant_text = normalize_text("".join(full_response))
