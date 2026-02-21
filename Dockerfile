@@ -1,8 +1,8 @@
 FROM python:3.11-slim
 
-# deps do sistema
+# deps do sistema (inclui zstd)
 RUN apt-get update && apt-get install -y \
-    curl ca-certificates bash \
+    curl ca-certificates bash zstd \
  && rm -rf /var/lib/apt/lists/*
 
 # instala ollama
@@ -21,8 +21,8 @@ COPY . /app
 ENV PORT=8080
 EXPOSE 8080
 
-# modelos (texto padrão). Vision é pesado no Railway, veja nota abaixo.
+# modelo default (leve)
 ENV OLLAMA_MODEL=llama3.2:3b
 
-# Sobe ollama -> puxa modelo -> sobe API
+# inicia ollama + baixa modelo + inicia api
 CMD ["bash", "-lc", "ollama serve & sleep 2 && ollama pull ${OLLAMA_MODEL} && uvicorn main:app --host 0.0.0.0 --port ${PORT}"]
