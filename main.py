@@ -3,35 +3,27 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, Response
 from pydantic import BaseModel
 import requests
-import json
 import os
+import json
 import uuid
 import base64
 import mimetypes
-from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 
 APP_TITLE = "Devset IA 👾"
 
-# 🔥 IMPORTANTE: dentro do Railway container é 127.0.0.1
-OLLAMA_CHAT_URL = "http://127.0.0.1:11434/api/chat"
-OLLAMA_TAGS_URL = "http://127.0.0.1:11434/api/tags"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-MODEL_DEFAULT_TEXT = "llama3.2:3b"
-MODEL_DEFAULT_VISION = MODEL_DEFAULT_TEXT  # 🔥 desativa llava por segurança
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+MODEL_DEFAULT = "llama-3.1-8b-instant"
 
 SYSTEM_PROMPT = """
-Você é a Devset Growth Strategist 👾, especialista em Marketing Digital.
+Você é a Devset Growth Strategist 👾 especialista em Marketing Digital.
 
 Regras:
-- Seja profissional, estruturado e direto.
-- Sempre use títulos, subtítulos e listas.
-- Use parágrafos curtos.
-- Nunca responda em bloco único.
+- Seja profissional e estruturado.
+- Use títulos e listas.
+- Parágrafos curtos.
 """.strip()
 
 app = FastAPI(title=APP_TITLE)
@@ -43,6 +35,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+FILES: Dict[str, Dict[str, Any]] = {}
 
 # =============================
 # UTIL
@@ -58,20 +55,13 @@ def guess_mime(filename: str, content_type: Optional[str]) -> str:
     mt = mimetypes.guess_type(filename)[0]
     return mt or "application/octet-stream"
 
-def image_to_b64(path: str) -> str:
-    with open(path, "rb") as f:
-        return base64.b64encode(f.read()).decode("utf-8")
-
 # =============================
-# MODELO REQUEST
+# MODELO INPUT
 # =============================
 
 class ChatInput(BaseModel):
     message: str
-    file_ids: Optional[List[str]] = None
     model: Optional[str] = None
-
-FILES: Dict[str, Dict[str, Any]] = {}
 
 # =============================
 # ROTAS
@@ -100,43 +90,36 @@ async def upload(file: UploadFile = File(...)):
     return {"file_id": file_id}
 
 # =============================
-# STREAM OLLAMA
+# STREAM GROQ
 # =============================
 
-def stream_ollama(messages: List[Dict[str, Any]], model_name: str):
+def stream_groq(messages: List[Dict[str, str]], model: str):
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
     payload = {
-        "model": model_name,
+        "model": model,
         "messages": messages,
         "stream": True
     }
 
-    try:
-        with requests.post(
-            OLLAMA_CHAT_URL,
-            json=payload,
-            stream=True,
-            timeout=240
-        ) as r:
-
-            r.raise_for_status()
-
-            for line in r.iter_lines(decode_unicode=True):
-                if not line:
-                    continue
-                try:
-                    obj = json.loads(line)
-                except:
-                    continue
-
-                if obj.get("done"):
-                    break
-
-                chunk = (obj.get("message") or {}).get("content", "")
-                if chunk:
-                    yield sse_data(chunk)
-
-    except Exception as e:
-        yield sse_data(f"Erro 👾: {str(e)}")
+    with requests.post(GROQ_URL, headers=headers, json=payload, stream=True) as r:
+        for line in r.iter_lines():
+            if line:
+                decoded = line.decode("utf-8")
+                if decoded.startswith("data: "):
+                    data_str = decoded[6:]
+                    if data_str.strip() == "[DONE]":
+                        break
+                    try:
+                        obj = json.loads(data_str)
+                        delta = obj["choices"][0]["delta"].get("content", "")
+                        if delta:
+                            yield sse_data(delta)
+                    except:
+                        continue
 
     yield "event: done\ndata: [DONE]\n\n"
 
@@ -155,10 +138,10 @@ def chat_stream(payload: ChatInput):
         {"role": "user", "content": user_text}
     ]
 
-    chosen_model = payload.model or MODEL_DEFAULT_TEXT
+    chosen_model = payload.model or MODEL_DEFAULT
 
     return StreamingResponse(
-        stream_ollama(messages, chosen_model),
+        stream_groq(messages, chosen_model),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
