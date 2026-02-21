@@ -548,3 +548,10 @@ def chat_stream(payload: ChatInput):
     }
 
     return StreamingResponse(generator(), media_type="text/event-stream", headers=headers)
+  @app.get("/test_groq")
+def test_groq():
+    headers = {
+        "Authorization": f"Bearer {os.getenv('GROQ_API_KEY')}"
+    }
+    r = requests.get("https://api.groq.com/openai/v1/models", headers=headers)
+    return r.json()
