@@ -1,0 +1,13 @@
+fastapi==0.95.2
+uvicorn[standard]==0.22.0
+pydantic==1.10.12
+requests==2.31.0
+python-multipart==0.0.9
+
+# Async SQLAlchemy support
+SQLAlchemy==1.4.48
+aiosqlite==0.18.0
+
+# Env
+python-dotenv==1.0.0
+aiosmtplib==1.1.6
