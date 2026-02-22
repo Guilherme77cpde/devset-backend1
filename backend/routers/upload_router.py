@@ -4,7 +4,7 @@ import os
 import aiofiles
 from uuid import uuid4
 
-router = APIRouter(tags=["upload"])
+router = APIRouter(prefix="/upload", tags=["upload"])
 
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "uploads")
 os.makedirs(os.path.join(os.path.dirname(UPLOAD_DIR), "uploads"), exist_ok=True)

@@ -3,7 +3,6 @@ import logging
 import asyncio
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 from .database import engine, Base
 from .routers import auth_router, chat_router, upload_router
 # ensure models imported for metadata
@@ -72,21 +71,3 @@ def _sse_data(text: str) -> str:
     lines = (text or "").splitlines() or [""]
     return "".join([f"data: {ln}\n" for ln in lines]) + "\n"
 
-
-@app.post("/chat_stream")
-async def chat_stream(request: Request):
-    try:
-        payload = await request.json()
-    except Exception:
-        payload = {}
-    message = (payload.get("message") if isinstance(payload, dict) else None) or ""
-
-    async def generator():
-        yield _sse_data("[START]").encode("utf-8")
-        await asyncio.sleep(0.05)
-        for chunk in ["Thinking.", "Thinking..", "Thinking...", f"Echo: {message}"]:
-            yield _sse_data(chunk).encode("utf-8")
-            await asyncio.sleep(0.05)
-        yield _sse_data("[DONE]").encode("utf-8")
-
-    return StreamingResponse(generator(), media_type="text/event-stream")
