@@ -1520,7 +1520,7 @@ const LIMIT_RENDER = 80;
 const LOG_LIMIT = 300;
 
 /* ✅ backend Railway (default) */
-const RAILWAY_API_STREAM = "https://devset-backend1-production-0b6f.up.railway.app/chat_stream";
+const RAILWAY_API_STREAM = "https://devset-backend1-production-0b6f.up.railway.app";
 
 /* ===========================
    STATE
@@ -1691,7 +1691,8 @@ function getAPI(){
 }
 function getAPIBase(){
   const api = getAPI();
-  return api.replace(/\/chat_stream\/?$/i, "");
+  // remove trailing /chat_stream if present, then strip trailing slashes
+  return api.replace(/\/chat_stream\/?$/i, "").replace(/\/+$/i, "");
 }
 function getModel(){
   const m = (state.prefs?.model || "").trim();
