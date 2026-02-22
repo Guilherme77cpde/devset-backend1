@@ -27,7 +27,7 @@ uvicorn main:app --reload
 Frontend example (fetch with credentials include):
 
 ```js
-fetch('https://your-backend.example.com/chat_stream', {
+fetch('https://devset-backend1-production-0b6f.up.railway.app/chat_stream', {
   method: 'POST',
   credentials: 'include',
   headers: {'Content-Type': 'application/json'},

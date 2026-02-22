@@ -4,10 +4,10 @@ import asyncio
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from database import engine, Base
-from routers import auth_router, chat_router, upload_router
-# ensure models are imported so SQLAlchemy metadata is populated
-import models  # noqa: F401
+from .database import engine, Base
+from .routers import auth_router, chat_router, upload_router
+# ensure models imported for metadata
+from . import models  # noqa: F401
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -16,15 +16,12 @@ def parse_origins(env_value: str | None) -> list[str]:
     if not env_value:
         return []
     parts = [s.strip() for s in env_value.split(",") if s.strip()]
-    # do not accept wildcard when credentials are required
     return [p for p in parts if p != "*"]
 
 
 app = FastAPI(title="Devset Backend")
 
 # configure CORS: read ALLOW_ORIGINS from env (comma separated)
-# Recommended origin for deployment on Railway:
-# https://devset-backend1-production-0b6f.up.railway.app
 origins = parse_origins(os.getenv("ALLOW_ORIGINS")) or [
     "https://devset-backend1-production-0b6f.up.railway.app",
     "http://localhost:3000",
@@ -46,7 +43,7 @@ async def on_startup():
         await conn.run_sync(Base.metadata.create_all)
 
 
-# include routers implemented in routers/ package
+# include routers
 app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(upload_router)
