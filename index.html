@@ -1,0 +1,3349 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Devset IA 👾</title>
+
+<style>
+/* ==========================
+   THEME TOKENS
+========================== */
+:root{
+  --bg:#0b0b0f;
+  --panel:#121218;
+  --panel2:#171722;
+  --panel3:#1f1f2b;
+  --border:#262635;
+  --accent:#7c5cff;
+  --text:#ffffff;
+  --muted:#a1a1b3;
+  --radius:14px;
+  --shadow: 0 12px 40px rgba(0,0,0,.35);
+
+  --glass: rgba(20,20,28,.78);
+  --glass2: rgba(255,255,255,.03);
+  --danger:#ff8080;
+}
+
+html[data-theme="light"]{
+  --bg:#f6f7fb;
+  --panel:#ffffff;
+  --panel2:#f2f3f8;
+  --panel3:#eceef6;
+  --border:#d9dbea;
+  --text:#12131a;
+  --muted:#5a607a;
+  --shadow: 0 12px 40px rgba(0,0,0,.12);
+
+  --glass: rgba(255,255,255,.85);
+  --glass2: rgba(0,0,0,.03);
+}
+
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
+  background:
+    radial-gradient(1200px 800px at 55% 20%, rgba(124,92,255,.10), transparent 60%),
+    radial-gradient(900px 600px at 20% 80%, rgba(124,92,255,.08), transparent 55%),
+    var(--bg);
+  color:var(--text);
+  overflow:hidden;
+}
+
+/* ===== App ===== */
+.app{
+  width:100%;
+  height:100%;
+  display:flex;
+  overflow:hidden;
+}
+
+/* ==========================
+   SIDEBAR
+========================== */
+.sidebar{
+  height:100%;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.02), transparent 30%),
+    var(--panel);
+  display:flex;
+  flex-direction:column;
+  z-index:5;
+
+  width: 296px;
+  min-width: 296px;
+  transition: width .18s ease, min-width .18s ease;
+  overflow:hidden;
+  position:relative;
+}
+.sidebar::after{
+  content:"";
+  position:absolute;
+  top:0; right:0;
+  width:1px; height:100%;
+  background: var(--border);
+  pointer-events:none;
+}
+
+/* ✅ FIX DO “BUG LATERAL” NO RAIL */
+.sidebar.rail{ width:56px; min-width:56px; }
+.sidebar.rail .sb-top{ padding:12px 8px; justify-content:center; }
+.sidebar.rail .sb-rail-actions{ padding:10px 8px; }
+.sidebar.rail .iconBtn{ width:36px;height:36px; border-radius:12px; }
+.sidebar.rail .brand{display:none;}
+
+.sb-top{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:14px 12px;
+  min-height:64px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  flex:1;
+}
+.logo{
+  width:36px;height:36px;border-radius:12px;
+  background: rgba(124,92,255,.16);
+  border:1px solid rgba(124,92,255,.25);
+  display:grid;place-items:center;
+  box-shadow: 0 10px 20px rgba(124,92,255,.08);
+}
+.brandText{min-width:0;}
+.brandText .title{
+  font-weight:950;
+  letter-spacing:.2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.brandText .sub{ font-size:12px;color:var(--muted); margin-top:2px; }
+
+.iconBtn{
+  width:38px;height:38px;border-radius:12px;
+  background: rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  color:var(--text);
+  cursor:pointer;
+  display:grid;place-items:center;
+  transition:.15s;
+  flex:0 0 auto;
+}
+html[data-theme="light"] .iconBtn{
+  background: rgba(0,0,0,.03);
+  border:1px solid rgba(0,0,0,.06);
+}
+.iconBtn:hover{background: rgba(255,255,255,.06);}
+
+.sb-rail-actions{
+  display:none;
+  flex-direction:column;
+  gap:10px;
+  padding:12px;
+}
+.sidebar.rail .sb-rail-actions{display:flex;}
+
+.sb-open{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding: 0 12px 12px;
+  overflow:hidden;
+}
+.sidebar.rail .sb-open{display:none;}
+
+.sb-open-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding: 0 0 2px;
+}
+.sb-open-head .gemTitle{
+  font-weight:950;
+  letter-spacing:.2px;
+  opacity:.95;
+}
+
+.sb-search{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border:1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.03);
+  color: rgba(255,255,255,.8);
+}
+html[data-theme="light"] .sb-search{
+  border:1px solid rgba(0,0,0,.08);
+  background: rgba(0,0,0,.03);
+  color: rgba(0,0,0,.7);
+}
+.sb-search input{
+  width:100%;
+  border:0;
+  outline:0;
+  background:transparent;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.sb-primary{ display:flex; gap:10px; }
+.primaryBtn{
+  flex:1;
+  padding:11px 12px;
+  border-radius:12px;
+  background: rgba(124,92,255,.14);
+  border:1px solid rgba(124,92,255,.26);
+  color:var(--text);
+  cursor:pointer;
+  font-weight:950;
+  display:flex;align-items:center;justify-content:center;
+  gap:8px;
+  transition:.15s;
+}
+.primaryBtn:hover{background: rgba(124,92,255,.20);}
+
+.sb-section-title{
+  margin-top:6px;
+  color: rgba(255,255,255,.55);
+  font-size:12px;
+  padding: 0 2px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+html[data-theme="light"] .sb-section-title{
+  color: rgba(0,0,0,.55);
+}
+
+.chatList{
+  overflow:auto;
+  border-radius: 14px;
+  border:1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.02);
+}
+html[data-theme="light"] .chatList{
+  border:1px solid rgba(0,0,0,.08);
+  background: rgba(0,0,0,.02);
+}
+
+.chatList .item{
+  padding:12px 12px;
+  border-bottom:1px solid rgba(255,255,255,.05);
+  cursor:pointer;
+  transition:.12s;
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  position:relative;
+}
+html[data-theme="light"] .chatList .item{
+  border-bottom:1px solid rgba(0,0,0,.06);
+}
+.chatList .item:hover{background: rgba(255,255,255,.03);}
+.chatList .item.active{background: rgba(124,92,255,.10);}
+
+.item .dot{
+  width:10px;height:10px;border-radius:99px;
+  margin-top:5px;
+  background: rgba(124,92,255,.55);
+  box-shadow: 0 0 0 4px rgba(124,92,255,.12);
+}
+.item .meta{flex:1; min-width:0;}
+.item .name{
+  font-weight:950;
+  font-size:13px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.pinBadge{
+  font-size:11px;
+  padding:2px 7px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  opacity:.85;
+}
+html[data-theme="light"] .pinBadge{
+  border:1px solid rgba(0,0,0,.12);
+}
+
+.item .preview{
+  margin-top:4px;
+  font-size:12px;
+  color: var(--muted);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.itemActions{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.miniBtn{
+  width:30px;height:30px;border-radius:10px;
+  background: transparent;
+  border:1px solid rgba(255,255,255,.08);
+  color: var(--muted);
+  cursor:pointer;
+  display:grid;place-items:center;
+}
+html[data-theme="light"] .miniBtn{
+  border:1px solid rgba(0,0,0,.10);
+}
+.miniBtn:hover{ background: rgba(255,255,255,.04); }
+.miniBtn.danger:hover{
+  border-color: rgba(255,80,80,.35);
+  color: var(--danger);
+}
+.miniBtn.more{ font-weight:900; }
+
+.sb-footer{
+  margin-top:auto;
+  padding-top:10px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.sb-footer .small{
+  flex:1;
+  font-size:12px;
+  color: rgba(255,255,255,.55);
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  padding-right: 4px;
+}
+html[data-theme="light"] .sb-footer .small{
+  color: rgba(0,0,0,.55);
+}
+
+/* ==========================
+   MAIN
+========================== */
+.main{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  position:relative;
+}
+
+.topbar{
+  height:64px;
+  padding:0 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  background: rgba(0,0,0,.10);
+  backdrop-filter: blur(8px);
+  flex:0 0 auto;
+}
+html[data-theme="light"] .topbar{
+  background: rgba(255,255,255,.60);
+}
+
+.topLeft{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.chatTitle{
+  font-weight:950;
+  letter-spacing:.2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width: 62vw;
+}
+.badge{
+  font-size:12px;
+  color: var(--muted);
+  border:1px solid rgba(255,255,255,.10);
+  padding:5px 9px;
+  border-radius:999px;
+}
+html[data-theme="light"] .badge{ border:1px solid rgba(0,0,0,.12); }
+.statusDot{
+  width:8px;height:8px;border-radius:99px;
+  background:#4ade80;
+  box-shadow: 0 0 0 4px rgba(74,222,128,.12);
+}
+
+/* ===== Home ===== */
+.home{
+  flex:1;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding: 40px 20px;
+  overflow:auto;
+}
+.home.show{display:flex;}
+.homeInner{width:min(900px, 100%);}
+
+.helloLine{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color: rgba(255,255,255,.85);
+  font-size:18px;
+  margin-bottom: 10px;
+}
+html[data-theme="light"] .helloLine{ color: rgba(0,0,0,.82); }
+
+.sparkle{
+  width:22px;height:22px;
+  display:grid;place-items:center;
+  filter: drop-shadow(0 8px 18px rgba(124,92,255,.25));
+}
+.homeTitle{
+  font-size:44px;
+  font-weight:1000;
+  letter-spacing:-.8px;
+  margin: 0 0 18px;
+}
+
+.homeComposer{
+  width:min(820px, 100%);
+  border-radius: 18px;
+  border:1px solid rgba(255,255,255,.06);
+  background: var(--glass2);
+  box-shadow: 0 18px 50px rgba(0,0,0,.18);
+  padding: 14px 16px 12px;
+}
+html[data-theme="light"] .homeComposer{
+  border:1px solid rgba(0,0,0,.08);
+  box-shadow: 0 18px 50px rgba(0,0,0,.10);
+}
+.homeComposerTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+  flex-wrap:wrap;
+}
+.homeLeftBtns{ display:flex; align-items:center; gap:10px; }
+.pill{
+  padding:8px 10px;
+  border-radius: 999px;
+  border:1px solid rgba(255,255,255,.08);
+  background: rgba(0,0,0,.12);
+  color: rgba(255,255,255,.85);
+  font-size:12px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+html[data-theme="light"] .pill{
+  border:1px solid rgba(0,0,0,.10);
+  background: rgba(0,0,0,.04);
+  color: rgba(0,0,0,.75);
+}
+.pillBtn{
+  width:34px;height:34px;border-radius:12px;
+  display:grid;place-items:center;
+  background: rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  color: rgba(255,255,255,.85);
+  cursor:pointer;
+}
+html[data-theme="light"] .pillBtn{
+  background: rgba(0,0,0,.03);
+  border:1px solid rgba(0,0,0,.08);
+  color: rgba(0,0,0,.75);
+}
+.pillBtn:hover{background: rgba(255,255,255,.06);}
+.homeRightBtns{ display:flex; align-items:center; gap:10px; }
+.homeRightBtns{ flex-wrap:wrap; justify-content:flex-end; }
+.homeInputRow{ display:flex; gap:12px; align-items:stretch; }
+.homeTextarea{
+  flex:1;
+  min-height:48px;
+  max-height:140px;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border:1px solid rgba(255,255,255,.06);
+  background: rgba(0,0,0,.18);
+  color: var(--text);
+  outline:none;
+  resize:none;
+}
+html[data-theme="light"] .homeTextarea{
+  border:1px solid rgba(0,0,0,.10);
+  background: rgba(0,0,0,.03);
+}
+.homeSend{
+  padding:0 18px;
+  border-radius: 14px;
+  border:1px solid rgba(124,92,255,.35);
+  background: rgba(124,92,255,.95);
+  color:#fff;
+  font-weight:950;
+  cursor:pointer;
+  min-width:110px;
+}
+.homeSend:hover{filter: brightness(1.05);}
+.homeHint{ margin-top: 10px; color: rgba(255,255,255,.55); font-size:12px; }
+html[data-theme="light"] .homeHint{ color: rgba(0,0,0,.55); }
+
+@media (max-width: 520px){
+  .homeTitle{font-size:34px;}
+  .homeSend{min-width:92px;}
+  .pill{ padding:6px 8px; font-size:11px; }
+  .pillBtn{ width:30px; height:30px; }
+}
+
+/* ===== Chat ===== */
+.chat{
+  flex:1;
+  overflow:auto;
+  padding: 26px 24px 220px;
+  display:block;
+}
+
+.msg{max-width: 920px; margin: 0 auto 14px; display:flex;}
+.msg.user{justify-content:flex-end;}
+.bubble{
+  max-width: 78%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.06);
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+  white-space:normal;
+  word-break:break-word;
+  overflow-wrap:anywhere;
+  position:relative;
+}
+html[data-theme="light"] .bubble{
+  border:1px solid rgba(0,0,0,.08);
+}
+.msg.user .bubble{
+  background: rgba(124,92,255,.95);
+  border-color: rgba(124,92,255,.35);
+  color:#fff;
+}
+.msg.ai .bubble{background: var(--glass2);}
+
+.aiTag{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.msg.user .aiTag{display:none;}
+
+.bubble .md{ white-space:normal; line-height:1.55; }
+.bubble .md h1,
+.bubble .md h2,
+.bubble .md h3,
+.bubble .md h4{
+  margin:12px 0 8px;
+  font-weight:900;
+  line-height:1.3;
+}
+.bubble .md h1{font-size:20px;}
+.bubble .md h2{font-size:18px;}
+.bubble .md h3{font-size:16px;}
+.bubble .md h4{font-size:14px;}
+.bubble .md p{margin:0 0 10px;}
+.bubble .md p:last-child{margin-bottom:0;}
+.bubble .md ul,
+.bubble .md ol{margin:0 0 10px 18px;padding:0;}
+.bubble .md li{margin:4px 0;}
+.bubble .md strong{font-weight:900;}
+.bubble .md em{font-style:italic;}
+.bubble .md code.inline{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  padding:2px 6px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:8px;
+  background: rgba(0,0,0,.18);
+}
+html[data-theme="light"] .bubble .md code.inline{
+  border:1px solid rgba(0,0,0,.10);
+  background: rgba(0,0,0,.05);
+}
+
+.codeBlock{
+  position:relative;
+  margin: 10px 0;
+  border-radius: 14px;
+  border:1px solid rgba(255,255,255,.08);
+  background: rgba(0,0,0,.25);
+  overflow:hidden;
+}
+html[data-theme="light"] .codeBlock{
+  border:1px solid rgba(0,0,0,.10);
+  background: rgba(0,0,0,.04);
+}
+.codeHead{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding: 8px 10px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  color: rgba(255,255,255,.75);
+  font-size:12px;
+}
+html[data-theme="light"] .codeHead{
+  border-bottom:1px solid rgba(0,0,0,.08);
+  color: rgba(0,0,0,.65);
+}
+.codeBlock pre{
+  margin:0;
+  padding: 10px 10px;
+  overflow:auto;
+  max-height: 360px;
+}
+.codeBlock code{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height:1.5;
+  white-space:pre;
+}
+
+.msgActions{
+  margin-top: 8px;
+  display:flex;
+  gap:8px;
+  justify-content:flex-end;
+}
+.msg.ai .msgActions{ justify-content:flex-start; }
+.actionBtn{
+  height:28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border:1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+  color: rgba(255,255,255,.85);
+  cursor:pointer;
+  font-size:12px;
+  font-weight:850;
+}
+html[data-theme="light"] .actionBtn{
+  border:1px solid rgba(0,0,0,.10);
+  background: rgba(0,0,0,.03);
+  color: rgba(0,0,0,.80);
+}
+.actionBtn:hover{ background: rgba(255,255,255,.06); }
+
+.editBox{
+  margin-top:10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.editBox textarea{
+  width:100%;
+  min-height: 68px;
+  max-height: 180px;
+  padding: 10px 10px;
+  border-radius: 14px;
+  border:1px solid rgba(255,255,255,.08);
+  background: rgba(0,0,0,.18);
+  color: var(--text);
+  outline:none;
+  resize: vertical;
+}
+html[data-theme="light"] .editBox textarea{
+  border:1px solid rgba(0,0,0,.12);
+  background: rgba(0,0,0,.03);
+}
+.editRow{ display:flex; gap:10px; justify-content:flex-end; }
+
+/* ==========================
+   ATTACHMENTS (chips)
+========================== */
+.attachRow{
+  margin-top: 10px;
+  display:none;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.attachRow.show{ display:flex; }
+
+.attachChip{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+  max-width: 100%;
+}
+html[data-theme="light"] .attachChip{
+  border:1px solid rgba(0,0,0,.12);
+  background: rgba(0,0,0,.03);
+}
+.attachThumb{
+  width:34px; height:34px;
+  border-radius: 10px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.18);
+  overflow:hidden;
+  flex: 0 0 auto;
+  display:grid;
+  place-items:center;
+}
+html[data-theme="light"] .attachThumb{
+  border:1px solid rgba(0,0,0,.12);
+  background: rgba(0,0,0,.05);
+}
+.attachThumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.attachMeta{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.attachName{
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width: 320px;
+}
+.attachSub{
+  font-size:11px;
+  color: rgba(255,255,255,.60);
+}
+html[data-theme="light"] .attachSub{ color: rgba(0,0,0,.60); }
+.attachRemove{
+  width:28px;height:28px;border-radius: 10px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+  color: rgba(255,255,255,.85);
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+}
+html[data-theme="light"] .attachRemove{
+  border:1px solid rgba(0,0,0,.12);
+  background: rgba(0,0,0,.03);
+  color: rgba(0,0,0,.80);
+}
+.attachRemove:hover{ border-color: rgba(255,80,80,.35); color: var(--danger); }
+
+/* render attachments inside message bubble */
+.msgAttach{
+  margin-top: 10px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.msgAttach a{
+  text-decoration:none;
+  color: inherit;
+}
+
+/* ==========================
+   BOTTOM COMPOSER
+========================== */
+.bottomComposer{
+  position:absolute;
+  left:0; right:0;
+  bottom: 0;
+  padding: 18px 18px 14px;
+  pointer-events:none;
+}
+.bottomComposer.hidden{display:none;}
+.composerWrap{
+  width:min(760px, calc(100% - 24px));
+  margin: 0 auto;
+  pointer-events:auto;
+}
+.composerCard{
+  border-radius: 18px;
+  border:1px solid rgba(255,255,255,.06);
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 50px rgba(0,0,0,.18);
+  padding: 12px 12px 10px;
+}
+html[data-theme="light"] .composerCard{
+  border:1px solid rgba(0,0,0,.10);
+}
+.composerTopLine{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom: 10px;
+}
+.composerLabel{
+  color: rgba(255,255,255,.85);
+  font-weight: 800;
+  font-size: 13px;
+}
+html[data-theme="light"] .composerLabel{ color: rgba(0,0,0,.80); }
+
+.composerActions{ display:flex; align-items:center; gap:8px; }
+
+.toolBtn{
+  height:34px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border:1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+  color: rgba(255,255,255,.85);
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-weight: 850;
+  font-size: 12px;
+}
+html[data-theme="light"] .toolBtn{
+  border:1px solid rgba(0,0,0,.10);
+  background: rgba(0,0,0,.03);
+  color: rgba(0,0,0,.80);
+}
+.toolBtn:hover{background: rgba(255,255,255,.06);}
+.iconOnly{ width:34px; padding:0; display:grid; place-items:center; }
+.modeBtn{ min-width: 96px; justify-content:space-between; }
+
+.inputRow{
+  display:flex;
+  gap:10px;
+  align-items:flex-end;
+}
+
+textarea.bottomInput{
+  flex:1;
+  min-height: 44px;
+  max-height: 140px;
+  padding: 11px 12px;
+  border-radius: 14px;
+  border:1px solid rgba(255,255,255,.06);
+  background: rgba(0,0,0,.18);
+  color: var(--text);
+  outline:none;
+  resize:none;
+}
+html[data-theme="light"] textarea.bottomInput{
+  border:1px solid rgba(0,0,0,.10);
+  background: rgba(0,0,0,.03);
+}
+
+.sendBtn, .stopBtn{
+  height:44px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border:1px solid rgba(255,255,255,.08);
+  cursor:pointer;
+  font-weight:950;
+  white-space:nowrap;
+}
+html[data-theme="light"] .sendBtn,
+html[data-theme="light"] .stopBtn{
+  border:1px solid rgba(0,0,0,.10);
+}
+.sendBtn{
+  background: rgba(124,92,255,.95);
+  border-color: rgba(124,92,255,.35);
+  color:#fff;
+}
+.sendBtn:hover{filter: brightness(1.05);}
+.stopBtn{ background: rgba(255,255,255,.03); color: var(--text); }
+.stopBtn:hover{border-color: rgba(255,80,80,.35); color:var(--danger);}
+
+.hint{
+  width:min(760px, calc(100% - 24px));
+  margin: 10px auto 0;
+  color: rgba(255,255,255,.45);
+  font-size:12px;
+  text-align:center;
+}
+html[data-theme="light"] .hint{ color: rgba(0,0,0,.55); }
+
+/* ==========================
+   OVERLAYS (Logs + Config)
+========================== */
+.overlay{
+  position:fixed;
+  inset:0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+  padding: 18px;
+}
+.overlay.show{display:flex;}
+
+.panel{
+  width: min(980px, 100%);
+  height: min(620px, 100%);
+  border-radius: 18px;
+  border:1px solid rgba(255,255,255,.08);
+  background: rgba(18,18,24,.92);
+  box-shadow: 0 30px 90px rgba(0,0,0,.35);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+html[data-theme="light"] .panel{
+  background: rgba(255,255,255,.92);
+  border:1px solid rgba(0,0,0,.10);
+  box-shadow: 0 30px 90px rgba(0,0,0,.18);
+}
+
+.panelHeader{
+  padding: 12px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+html[data-theme="light"] .panelHeader{
+  border-bottom:1px solid rgba(0,0,0,.10);
+}
+.panelTitle{
+  font-weight:950;
+  letter-spacing:.2px;
+  color: rgba(255,255,255,.92);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+html[data-theme="light"] .panelTitle{
+  color: rgba(0,0,0,.85);
+}
+.panelActions{ display:flex; gap:10px; align-items:center; }
+
+.panelBody{
+  padding: 12px;
+  flex:1;
+  overflow:auto;
+}
+
+/* logs */
+.logsPre{
+  margin:0;
+  white-space:pre-wrap;
+  word-break:break-word;
+  color: rgba(255,255,255,.85);
+  font-size:12px;
+  line-height:1.5;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+html[data-theme="light"] .logsPre{
+  color: rgba(0,0,0,.80);
+}
+
+/* config form */
+.formGrid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+}
+@media (max-width: 820px){
+  .formGrid{ grid-template-columns: 1fr; }
+}
+.field{
+  border:1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+  border-radius: 16px;
+  padding: 12px;
+}
+html[data-theme="light"] .field{
+  border:1px solid rgba(0,0,0,.10);
+  background: rgba(0,0,0,.03);
+}
+.field label{
+  display:block;
+  font-size:12px;
+  color: rgba(255,255,255,.65);
+  margin-bottom:8px;
+  font-weight:800;
+}
+html[data-theme="light"] .field label{
+  color: rgba(0,0,0,.60);
+}
+.field input, .field select{
+  width:100%;
+  height:40px;
+  border-radius: 12px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.18);
+  color: var(--text);
+  outline:none;
+  padding: 0 10px;
+}
+html[data-theme="light"] .field input,
+html[data-theme="light"] .field select{
+  border:1px solid rgba(0,0,0,.12);
+  background: rgba(0,0,0,.03);
+}
+.smallHint{
+  margin-top:8px;
+  color: rgba(255,255,255,.55);
+  font-size:12px;
+}
+html[data-theme="light"] .smallHint{ color: rgba(0,0,0,.55); }
+
+/* tiny context menu for chat items */
+.ctxMenu{
+  position:fixed;
+  z-index:10000;
+  width: 220px;
+  border-radius: 14px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(18,18,24,.96);
+  box-shadow: 0 20px 60px rgba(0,0,0,.45);
+  overflow:hidden;
+  display:none;
+}
+html[data-theme="light"] .ctxMenu{
+  background: rgba(255,255,255,.96);
+  border:1px solid rgba(0,0,0,.12);
+  box-shadow: 0 20px 60px rgba(0,0,0,.20);
+}
+.ctxMenu.show{display:block;}
+.ctxItem{
+  padding: 10px 12px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  font-size: 13px;
+  color: rgba(255,255,255,.88);
+}
+html[data-theme="light"] .ctxItem{ color: rgba(0,0,0,.85); }
+.ctxItem:hover{ background: rgba(124,92,255,.12); }
+.ctxItem.danger:hover{ background: rgba(255,80,80,.12); color: var(--danger); }
+.ctxSep{ height:1px; background: rgba(255,255,255,.08); }
+html[data-theme="light"] .ctxSep{ background: rgba(0,0,0,.10); }
+
+/* typing indicator */
+.typing{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  color: rgba(255,255,255,.75);
+  font-size: 12px;
+}
+html[data-theme="light"] .typing{
+  color: rgba(0,0,0,.65);
+}
+.dotPulse{
+  width:6px;height:6px;border-radius:99px;
+  background: rgba(124,92,255,.85);
+  animation: pulse 1s infinite ease-in-out;
+}
+.dotPulse:nth-child(2){ animation-delay:.15s; }
+.dotPulse:nth-child(3){ animation-delay:.3s; }
+@keyframes pulse{
+  0%,100%{ transform: translateY(0); opacity:.4; }
+  50%{ transform: translateY(-2px); opacity:1; }
+}
+
+/* tools menu (model picker) */
+.toolsMenu{
+  position:fixed;
+  z-index:10001;
+  width: 280px;
+  border-radius: 16px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(18,18,24,.96);
+  box-shadow: 0 20px 60px rgba(0,0,0,.45);
+  overflow:hidden;
+  display:none;
+}
+html[data-theme="light"] .toolsMenu{
+  background: rgba(255,255,255,.96);
+  border:1px solid rgba(0,0,0,.12);
+  box-shadow: 0 20px 60px rgba(0,0,0,.20);
+}
+.toolsMenu.show{display:block;}
+.toolsHead{
+  padding: 10px 12px;
+  font-weight:950;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+html[data-theme="light"] .toolsHead{
+  border-bottom:1px solid rgba(0,0,0,.10);
+}
+.toolsBody{ padding: 10px 12px; }
+.toolsLabel{
+  font-size:12px;
+  color: rgba(255,255,255,.65);
+  margin-bottom:8px;
+  font-weight:900;
+}
+html[data-theme="light"] .toolsLabel{ color: rgba(0,0,0,.60); }
+.toolsSelect{
+  width:100%;
+  height:40px;
+  border-radius: 12px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.18);
+  color: var(--text);
+  outline:none;
+  padding: 0 10px;
+}
+.toolsSelect option{
+  background: var(--panel);
+  color: var(--text);
+}
+html[data-theme="light"] .toolsSelect{
+  border:1px solid rgba(0,0,0,.12);
+  background: rgba(0,0,0,.03);
+  color: var(--text);
+}
+.toolsHint{
+  margin-top:8px;
+  font-size:12px;
+  color: rgba(255,255,255,.55);
+}
+html[data-theme="light"] .toolsHint{ color: rgba(0,0,0,.55); }
+
+/* ==========================
+   CONFIRM BAR (embaixo)
+========================== */
+.confirmBar{
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  width: min(760px, calc(100% - 22px));
+  z-index: 12000;
+  display: none;
+  pointer-events: none;
+}
+.confirmBar.show{ display:block; }
+
+.confirmCard{
+  pointer-events: auto;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(18,18,24,.92);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 60px rgba(0,0,0,.45);
+  padding: 12px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+}
+html[data-theme="light"] .confirmCard{
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(0,0,0,.10);
+  box-shadow: 0 18px 60px rgba(0,0,0,.18);
+}
+
+.confirmLeft{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.confirmTitle{
+  font-weight: 950;
+  letter-spacing:.2px;
+  color: rgba(255,255,255,.92);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+html[data-theme="light"] .confirmTitle{ color: rgba(0,0,0,.86); }
+
+.confirmDesc{
+  font-size: 12px;
+  color: rgba(255,255,255,.65);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+html[data-theme="light"] .confirmDesc{ color: rgba(0,0,0,.60); }
+
+.confirmBtns{ display:flex; align-items:center; gap:10px; flex:0 0 auto; }
+
+.confirmBtn{
+  height:34px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+  color: rgba(255,255,255,.88);
+  cursor:pointer;
+  font-weight: 900;
+  font-size: 12px;
+}
+html[data-theme="light"] .confirmBtn{
+  border:1px solid rgba(0,0,0,.12);
+  background: rgba(0,0,0,.03);
+  color: rgba(0,0,0,.82);
+}
+.confirmBtn:hover{ background: rgba(255,255,255,.06); }
+
+.confirmBtn.danger{
+  border-color: rgba(255,80,80,.25);
+  background: rgba(255,80,80,.10);
+  color: #ffb1b1;
+}
+.confirmBtn.danger:hover{
+  border-color: rgba(255,80,80,.40);
+  background: rgba(255,80,80,.14);
+}
+@media (max-width:520px){
+  .confirmBar{ bottom: 12px; }
+  .confirmDesc{ display:none; }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar rail" id="sidebar" aria-label="Sidebar">
+    <div class="sb-top">
+      <button class="iconBtn" id="btnToggleRail" title="Abrir/Fechar">☰</button>
+      <div class="brand">
+        <div class="logo">👾</div>
+        <div class="brandText">
+          <div class="title">Devset IA</div>
+          <div class="sub">Online • Railway</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rail actions -->
+    <div class="sb-rail-actions">
+      <button class="iconBtn" id="railNew" title="Nova conversa">＋</button>
+      <button class="iconBtn" id="railTrash" title="Apagar tudo">🗑️</button>
+      <button class="iconBtn" id="railHistory" title="Abrir conversas">≡</button>
+      <button class="iconBtn" id="railCfg" title="Config">⚙</button>
+    </div>
+
+    <!-- Open content -->
+    <div class="sb-open">
+      <div class="sb-open-head">
+        <div class="gemTitle">Devset IA</div>
+        <div style="display:flex; gap:10px;">
+          <button class="iconBtn" id="btnClearAll" title="Apagar tudo">🗑️</button>
+        </div>
+      </div>
+
+      <div class="sb-search" title="Buscar conversas (Ctrl+K)">
+        🔎 <input id="sbSearchInput" placeholder="Buscar conversas..." />
+      </div>
+
+      <div class="sb-primary">
+        <button class="primaryBtn" id="btnNewChat">＋ <span>Nova conversa</span></button>
+      </div>
+
+      <div class="sb-section-title">
+        <span>Conversas</span>
+        <span id="countChats">0</span>
+      </div>
+
+      <div class="chatList" id="chatList"></div>
+
+      <!-- ✅ 3 botões finais -->
+      <div class="sb-footer">
+        <button class="iconBtn" id="btnLogs" title="Logs (Ctrl+L)">🧾</button>
+        <button class="iconBtn" id="btnCfg" title="Config (Ctrl+,)">⚙</button>
+        <button class="iconBtn" id="btnBackup" title="Export/Import">⬇</button>
+        <div class="small" id="sbFooterHint">Online</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div class="topLeft">
+        <div class="statusDot" title="Online"></div>
+        <div class="chatTitle" id="chatTitle">Nova conversa</div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <div class="badge" id="modeBadge" style="font-size:11px; padding:4px 8px;">Modo: Rápido</div>
+        <div class="badge" id="status">Online</div>
+      </div>
+    </div>
+
+    <!-- HOME -->
+    <div class="home" id="home">
+      <div class="homeInner">
+        <div class="helloLine">
+          <span class="sparkle">✨</span>
+          <span>Olá, <span id="homeName">Guilherme</span></span>
+        </div>
+        <div class="homeTitle">Por onde começamos?</div>
+
+        <div class="homeComposer">
+          <div class="homeComposerTop">
+            <div class="homeLeftBtns">
+              <button class="pillBtn" type="button" id="homePlus" title="Upload (imagem/arquivo)">＋</button>
+              <button class="pill" type="button" id="homeToolsBtn" title="Ferramentas">⚙ Ferramentas</button>
+            </div>
+            <div class="homeRightBtns">
+              <button class="pill" type="button" id="homeModeBtn" title="Mudar modo">Rápido ▾</button>
+              <button class="pillBtn" type="button" title="Futuro">🎙</button>
+            </div>
+          </div>
+
+          <div class="homeInputRow">
+            <textarea id="homeInput" class="homeTextarea" placeholder="Peça ao Devset IA 👾 (Enter envia, Shift+Enter quebra linha)"></textarea>
+            <button id="homeSend" class="homeSend">Enviar</button>
+          </div>
+
+          <!-- attachments (home) -->
+          <div class="attachRow" id="homeAttachRow"></div>
+
+          <div class="homeHint">Streaming SSE • Histórico leve • Logs ring-buffer</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat" id="chat"></div>
+
+    <!-- BOTTOM -->
+    <div class="bottomComposer hidden" id="bottomComposer">
+      <div class="composerWrap">
+        <div class="composerCard">
+          <div class="composerTopLine">
+            <div class="composerLabel">Peça ao Devset IA 👾</div>
+            <div class="composerActions">
+              <button class="toolBtn iconOnly" id="btnPlus" type="button" title="Upload (imagem/arquivo)">＋</button>
+              <button class="toolBtn" id="btnTools" type="button" title="Ferramentas">⚙ Ferramentas</button>
+              <button class="toolBtn modeBtn" id="btnMode" type="button" title="Modo (futuro)">
+                <span>Rápido</span> <span style="opacity:.8;">▾</span>
+              </button>
+              <button class="toolBtn iconOnly" id="btnMic" type="button" title="Microfone (futuro)">🎙</button>
+            </div>
+          </div>
+
+          <div class="inputRow">
+            <textarea id="input" class="bottomInput" placeholder="Pergunte algo… (Enter envia, Shift+Enter quebra linha)"></textarea>
+            <button class="stopBtn" id="btnStop" style="display:none;">Parar</button>
+            <button class="sendBtn" id="btnSend">Enviar</button>
+          </div>
+
+          <!-- attachments (bottom) -->
+          <div class="attachRow" id="attachRow"></div>
+        </div>
+
+        <div class="hint" id="hintLine">Streaming SSE • Histórico leve • Logs ring-buffer</div>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<!-- Context Menu (… por conversa) -->
+<div class="ctxMenu" id="ctxMenu" role="menu" aria-hidden="true"></div>
+
+<!-- TOOLS MENU (MODEL PICKER) -->
+<div class="toolsMenu" id="toolsMenu" aria-hidden="true">
+  <div class="toolsHead">
+    <span>⚙ Ferramentas</span>
+    <button class="toolBtn" id="toolsCloseBtn" type="button" style="height:30px;padding:0 10px;">✕</button>
+  </div>
+  <div class="toolsBody">
+    <div class="toolsLabel">Modelo</div>
+    <select class="toolsSelect" id="toolsModelSelect"></select>
+    <div class="toolsHint">
+      Modelo atual: <b id="toolsModelNow">—</b><br/>
+      Trocar aqui muda o modelo usado nas próximas mensagens.
+    </div>
+  </div>
+</div>
+
+<!-- MODE MENU -->
+<div class="toolsMenu" id="modeMenu" aria-hidden="true">
+  <div class="toolsHead">
+    <span>🎯 Modo</span>
+    <button class="toolBtn" id="modeCloseBtn" type="button" style="height:30px;padding:0 10px;">✕</button>
+  </div>
+  <div class="toolsBody">
+    <div class="toolsLabel">Escolha o modo</div>
+    <div id="modeOptions" style="display:flex; flex-direction:column; gap:8px;"></div>
+    <div class="toolsHint" style="margin-top:10px;">
+      Modo atual: <b id="modeNow">—</b><br/>
+      Muda a persona da IA nas respostas.
+    </div>
+  </div>
+</div>
+
+<!-- LOGS OVERLAY -->
+<div class="overlay" id="logsOverlay" aria-hidden="true">
+  <div class="panel" role="dialog" aria-modal="true" aria-label="Logs do Devset IA">
+    <div class="panelHeader">
+      <div class="panelTitle">🧾 Logs</div>
+      <div class="panelActions">
+        <button class="toolBtn" id="logsCopyBtn" type="button" title="Copiar logs">📋 Copiar</button>
+        <button class="toolBtn" id="logsClearBtn" type="button" title="Limpar logs">🧹 Limpar</button>
+        <button class="toolBtn" id="logsCloseBtn" type="button" title="Fechar">✕ Fechar</button>
+      </div>
+    </div>
+    <div class="panelBody">
+      <pre class="logsPre" id="logsPre">(vazio)</pre>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIG OVERLAY -->
+<div class="overlay" id="cfgOverlay" aria-hidden="true">
+  <div class="panel" role="dialog" aria-modal="true" aria-label="Configurações do Devset IA">
+    <div class="panelHeader">
+      <div class="panelTitle">⚙ Config</div>
+      <div class="panelActions">
+        <button class="toolBtn" id="cfgSaveBtn" type="button" title="Salvar">💾 Salvar</button>
+        <button class="toolBtn" id="cfgCloseBtn" type="button" title="Fechar">✕ Fechar</button>
+      </div>
+    </div>
+    <div class="panelBody">
+      <div class="formGrid">
+        <div class="field">
+          <label for="cfgTheme">Tema</label>
+          <select id="cfgTheme">
+            <option value="dark">Escuro</option>
+            <option value="light">Claro</option>
+          </select>
+          <div class="smallHint">Troca o tema da interface.</div>
+        </div>
+
+        <div class="field">
+          <label for="cfgApi">API (chat_stream)</label>
+          <input id="cfgApi" placeholder="https://devset-backend1-production-0b6f.up.railway.app/chat_stream" />
+          <div class="smallHint">Se mudar o backend, muda aqui.</div>
+        </div>
+
+        <div class="field">
+          <label for="cfgAutoScroll">Auto-scroll</label>
+          <select id="cfgAutoScroll">
+            <option value="true">Ligado</option>
+            <option value="false">Desligado</option>
+          </select>
+          <div class="smallHint">Se desligar, você controla o scroll.</div>
+        </div>
+
+        <div class="field">
+          <label for="cfgLimitRender">Limite de render</label>
+          <select id="cfgLimitRender">
+            <option value="true">Ligado</option>
+            <option value="false">Desligado</option>
+          </select>
+          <div class="smallHint">Quando ligado, renderiza só as últimas mensagens (melhora performance).</div>
+        </div>
+
+        <div class="field">
+          <label>Backup</label>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="toolBtn" id="exportJsonBtn" type="button">⬇ Exportar JSON</button>
+            <button class="toolBtn" id="importJsonBtn" type="button">⬆ Importar JSON</button>
+            <button class="toolBtn" id="exportMdBtn" type="button">📝 Exportar MD (chat)</button>
+          </div>
+          <input type="file" id="importFile" accept="application/json" style="display:none;" />
+          <div class="smallHint">Exporta/importa seu histórico. MD exporta só a conversa aberta.</div>
+        </div>
+
+        <div class="field">
+          <label>Atalhos</label>
+          <div class="smallHint">
+            Ctrl+K buscar • Ctrl+N novo chat • Ctrl+L logs • Ctrl+, config • Esc fecha
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Upload</label>
+          <div class="smallHint">
+            Use o botão <b>＋</b> no chat para enviar imagem/arquivo.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ CONFIRM BAR -->
+<div class="confirmBar" id="confirmBar" aria-hidden="true">
+  <div class="confirmCard" role="dialog" aria-modal="true">
+    <div class="confirmLeft">
+      <div class="confirmTitle" id="confirmTitle">Confirmar</div>
+      <div class="confirmDesc" id="confirmDesc">—</div>
+    </div>
+    <div class="confirmBtns">
+      <button class="confirmBtn" id="confirmCancelBtn" type="button">Cancelar</button>
+      <button class="confirmBtn danger" id="confirmOkBtn" type="button">Apagar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ INPUT DE UPLOAD -->
+<input id="fileInput" type="file" multiple
+  accept="image/*,.pdf,.txt,.md,.csv,.json,.doc,.docx"
+  style="display:none" />
+
+<script>
+/* ===========================
+   CONFIG
+=========================== */
+const STORE_KEY = "devset_chats_v7";
+const LIMIT_RENDER = 80;
+const LOG_LIMIT = 300;
+
+/* ✅ backend Railway (default) */
+const RAILWAY_API_STREAM = "https://devset-backend1-production-0b6f.up.railway.app/chat_stream";
+
+/* ===========================
+   STATE
+=========================== */
+let state = loadState();
+let abortCtrl = null;
+
+// ✅ anexos pendentes (para a próxima mensagem)
+let pendingUploads = []; // [{file_id, name, mime, size, isImage, previewUrl}]
+
+/* ===========================
+   ELEMENTS
+=========================== */
+const sidebar = document.getElementById("sidebar");
+const chatEl = document.getElementById("chat");
+const homeEl = document.getElementById("home");
+const bottomComposer = document.getElementById("bottomComposer");
+
+const chatTitleEl = document.getElementById("chatTitle");
+const statusEl = document.getElementById("status");
+const sbFooterHint = document.getElementById("sbFooterHint");
+
+const homeInput = document.getElementById("homeInput");
+const homeSend = document.getElementById("homeSend");
+const homeNameEl = document.getElementById("homeName");
+
+const inputEl = document.getElementById("input");
+const btnSend = document.getElementById("btnSend");
+const btnStop = document.getElementById("btnStop");
+
+const chatListEl = document.getElementById("chatList");
+const countChatsEl = document.getElementById("countChats");
+const sbSearchInput = document.getElementById("sbSearchInput");
+
+/* footer */
+const btnLogs = document.getElementById("btnLogs");
+const btnCfg = document.getElementById("btnCfg");
+const btnBackup = document.getElementById("btnBackup");
+
+/* home tools */
+const homeToolsBtn = document.getElementById("homeToolsBtn");
+const homePlus = document.getElementById("homePlus");
+
+/* bottom tools */
+const btnTools = document.getElementById("btnTools");
+const btnPlus = document.getElementById("btnPlus");
+const btnMode = document.getElementById("btnMode");
+const homeModeBtn = document.getElementById("homeModeBtn");
+
+/* attachments UI */
+const attachRow = document.getElementById("attachRow");
+const homeAttachRow = document.getElementById("homeAttachRow");
+
+/* tools menu */
+const toolsMenu = document.getElementById("toolsMenu");
+const toolsCloseBtn = document.getElementById("toolsCloseBtn");
+const toolsModelSelect = document.getElementById("toolsModelSelect");
+const toolsModelNow = document.getElementById("toolsModelNow");
+
+/* mode menu */
+const modeMenu = document.getElementById("modeMenu");
+const modeCloseBtn = document.getElementById("modeCloseBtn");
+const modeOptions = document.getElementById("modeOptions");
+const modeNow = document.getElementById("modeNow");
+const modeBadge = document.getElementById("modeBadge");
+
+/* context menu */
+const ctxMenu = document.getElementById("ctxMenu");
+let ctxChatId = null;
+
+/* logs overlay */
+const logsOverlay = document.getElementById("logsOverlay");
+const logsPre = document.getElementById("logsPre");
+const logsCloseBtn = document.getElementById("logsCloseBtn");
+const logsClearBtn = document.getElementById("logsClearBtn");
+const logsCopyBtn = document.getElementById("logsCopyBtn");
+
+/* config overlay */
+const cfgOverlay = document.getElementById("cfgOverlay");
+const cfgCloseBtn = document.getElementById("cfgCloseBtn");
+const cfgSaveBtn = document.getElementById("cfgSaveBtn");
+const cfgTheme = document.getElementById("cfgTheme");
+const cfgApi = document.getElementById("cfgApi");
+const cfgAutoScroll = document.getElementById("cfgAutoScroll");
+const cfgLimitRender = document.getElementById("cfgLimitRender");
+const exportJsonBtn = document.getElementById("exportJsonBtn");
+const importJsonBtn = document.getElementById("importJsonBtn");
+const exportMdBtn = document.getElementById("exportMdBtn");
+const importFile = document.getElementById("importFile");
+
+/* ✅ file input */
+const fileInput = document.getElementById("fileInput");
+
+/* confirm bar */
+const confirmBar = document.getElementById("confirmBar");
+const confirmTitle = document.getElementById("confirmTitle");
+const confirmDesc  = document.getElementById("confirmDesc");
+const confirmCancelBtn = document.getElementById("confirmCancelBtn");
+const confirmOkBtn = document.getElementById("confirmOkBtn");
+let confirmResolver = null;
+
+let logs = [];
+let uiModels = []; // vindo do backend
+let lastAttemptedModel = null; // para evitar retry infinito
+
+/* ===========================
+   CONFIRM (custom embaixo)
+=========================== */
+function closeConfirm(){
+  confirmBar.classList.remove("show");
+  confirmBar.setAttribute("aria-hidden","true");
+  confirmResolver = null;
+}
+function confirmBottom({title="Confirmar", desc="Tem certeza?", okText="OK", cancelText="Cancelar", danger=true} = {}){
+  confirmTitle.textContent = title;
+  confirmDesc.textContent = desc;
+  confirmOkBtn.textContent = okText;
+  confirmCancelBtn.textContent = cancelText;
+  confirmOkBtn.classList.toggle("danger", !!danger);
+
+  confirmBar.classList.add("show");
+  confirmBar.setAttribute("aria-hidden","false");
+  setTimeout(()=>confirmOkBtn.focus(), 0);
+
+  return new Promise((resolve)=>{ confirmResolver = resolve; });
+}
+confirmCancelBtn.addEventListener("click", ()=>{
+  if(confirmResolver) confirmResolver(false);
+  closeConfirm();
+});
+confirmOkBtn.addEventListener("click", ()=>{
+  if(confirmResolver) confirmResolver(true);
+  closeConfirm();
+});
+document.addEventListener("keydown", (e)=>{
+  if(!confirmBar.classList.contains("show")) return;
+  if(e.key === "Escape"){
+    e.preventDefault();
+    if(confirmResolver) confirmResolver(false);
+    closeConfirm();
+  }
+  if(e.key === "Enter" && !e.shiftKey){
+    e.preventDefault();
+    if(confirmResolver) confirmResolver(true);
+    closeConfirm();
+  }
+});
+
+/* ===========================
+   PREFS / THEME / API
+=========================== */
+function defaultPrefs(){
+  return {
+    theme: "dark",
+    api: RAILWAY_API_STREAM,
+    autoScroll:true,
+    limitRender:true,
+    model: "",
+    mode: "Rápido",
+  };
+}
+function applyTheme(theme){
+  const t = theme === "light" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", t);
+}
+function getAPI(){
+  return (state.prefs?.api || defaultPrefs().api).trim();
+}
+function getAPIBase(){
+  const api = getAPI();
+  return api.replace(/\/chat_stream\/?$/i, "");
+}
+function getModel(){
+  const m = (state.prefs?.model || "").trim();
+  if(m) return m;
+  return uiModels[0] || "";
+}
+function getMode(){
+  return (state.prefs?.mode || "Rápido").trim() || "Rápido";
+}
+function getPersonaInstruction(mode){
+  const modeMap = {
+    "Rápido": "Responda de forma direta e curta. Sem introduções longas. Use bullets se ajudar.",
+    "📈 Growth": "Você é um Growth Strategist. Foque em aquisição, ativação, retenção, receita e referral. Dê hipóteses + experimentos + métricas.",
+    "✍️ Copy": "Você é um Copywriter de performance. Crie copies com gancho, prova, benefício e CTA. Sugira variações A/B.",
+    "💻 Dev": "Você é um Dev Senior. Explique e entregue código completo. Faça checklist de debug. Se faltar contexto, pergunte.",
+    "📊 Analytics": "Você é um Analista de dados. Defina métricas, eventos, funil, tracking e dashboards. Sugira queries e KPIs.",
+    "🚀 Launch": "Você é um Especialista de Lançamento. Estruture oferta, promessa, público, canais, cronograma e checklist."
+  };
+  return modeMap[mode] || modeMap["Rápido"];
+}
+
+/* ===========================
+   LOAD MODELS FROM BACKEND
+=========================== */
+const DECOMMISSIONED_MODELS = [
+  "llama-3.1-70b-versatile",
+  "mixtral-8x7b-32768",
+  "gemma2-9b-it"
+];
+
+const DECOMMISSIONED_GROQ_VARIANTS = [
+  "groq:llama-3.1-70b",
+  "groq:mixtral-8x7b",
+  "groq:gemma-7b-it"
+];
+
+const DEFAULT_VALID_MODELS = [
+  "llama-3.3-70b-versatile",
+  "llama-3.1-8b-instant",
+  "groq:llama-3.3-70b",
+  "groq:llama-3.1-8b",
+  "groq:mixtral-8x7b",
+  "groq:gemma-7b-it"
+];
+
+function isModelDecommissioned(model){
+  if(!model) return false;
+  return DECOMMISSIONED_MODELS.includes(model) || DECOMMISSIONED_GROQ_VARIANTS.includes(model);
+}
+
+function filterDecommissionedModels(models){
+  if(!Array.isArray(models)) return [...DEFAULT_VALID_MODELS];
+  const filtered = models.filter(m => !isModelDecommissioned(m));
+  return filtered.length > 0 ? filtered : [...DEFAULT_VALID_MODELS];
+}
+async function loadModelsFromBackend(){
+  try{
+    const res = await fetch(getAPIBase() + "/", { credentials: 'include' });
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const j = await res.json();
+
+    let rawModels = Array.isArray(j.models_available_ui)
+      ? j.models_available_ui
+      : (Array.isArray(j.models) ? j.models : []);
+    
+    // Filtrar modelos descontinuados
+    uiModels = filterDecommissionedModels(rawModels);
+
+    if(!state.prefs.model && uiModels.length){
+      state.prefs.model = uiModels[0];
+      saveState();
+    }
+    syncToolsMenu();
+  }catch(err){
+    log("Não consegui carregar models do backend: " + err.message);
+    uiModels = [...DEFAULT_VALID_MODELS];
+    syncToolsMenu();
+  }
+}
+function syncToolsMenu(){
+  toolsModelSelect.innerHTML = "";
+  const models = uiModels.length ? uiModels : ["padrão"];
+  for(const m of models){
+    const opt = document.createElement("option");
+    opt.value = m;
+    opt.textContent = m;
+    toolsModelSelect.appendChild(opt);
+  }
+  toolsModelSelect.value = getModel() || models[0] || "";
+  toolsModelNow.textContent = toolsModelSelect.value || "—";
+}
+
+/* ===========================
+   CLAMP HELPER
+=========================== */
+function clamp(n, min, max){
+  return Math.max(min, Math.min(max, n));
+}
+
+/* ===========================
+   TOOLS MENU OPEN/CLOSE
+=========================== */
+function openToolsMenu(anchorEl){
+  syncToolsMenu();
+  
+  // Mostrar com visibility:hidden para medir tamanho
+  toolsMenu.style.visibility = "hidden";
+  toolsMenu.classList.add("show");
+  toolsMenu.setAttribute("aria-hidden","false");
+  
+  // Aguardar paint para medir
+  requestAnimationFrame(()=>{
+    const r = anchorEl.getBoundingClientRect();
+    const menuRect = toolsMenu.getBoundingClientRect();
+    
+    // Calcular X (horizontal)
+    const x = clamp(r.left, 8, window.innerWidth - menuRect.width - 8);
+    
+    // Calcular Y (vertical)
+    const preferDownY = r.bottom + 10;
+    const downFits = preferDownY + menuRect.height + 8 <= window.innerHeight;
+    let y;
+    
+    if(downFits){
+      y = preferDownY;
+    }else{
+      y = clamp(r.top - 10 - menuRect.height, 8, window.innerHeight - menuRect.height - 8);
+    }
+    
+    // Aplicar posição
+    toolsMenu.style.left = x + "px";
+    toolsMenu.style.top = y + "px";
+    
+    // Remover visibility:hidden
+    toolsMenu.style.visibility = "";
+  });
+}
+function closeToolsMenu(){
+  toolsMenu.classList.remove("show");
+  toolsMenu.setAttribute("aria-hidden","true");
+}
+toolsCloseBtn.addEventListener("click", closeToolsMenu);
+document.addEventListener("click", (e)=>{
+  if(toolsMenu.classList.contains("show")){
+    const inside = toolsMenu.contains(e.target);
+    const btn = (e.target === btnTools) || btnTools.contains(e.target) || (e.target === homeToolsBtn) || homeToolsBtn.contains(e.target);
+    if(!inside && !btn) closeToolsMenu();
+  }
+});
+toolsModelSelect.addEventListener("change", ()=>{
+  state.prefs.model = toolsModelSelect.value;
+  saveState();
+  toolsModelNow.textContent = toolsModelSelect.value || "—";
+  log("Modelo selecionado: " + (toolsModelSelect.value || "—"));
+});
+
+function openModeMenu(anchorEl){
+  syncModeMenu();
+  
+  // Mostrar com visibility:hidden para medir tamanho
+  modeMenu.style.visibility = "hidden";
+  modeMenu.classList.add("show");
+  modeMenu.setAttribute("aria-hidden","false");
+  
+  // Aguardar paint para medir
+  requestAnimationFrame(()=>{
+    const r = anchorEl.getBoundingClientRect();
+    const menuRect = modeMenu.getBoundingClientRect();
+    
+    // Calcular X (horizontal)
+    const x = clamp(r.left, 8, window.innerWidth - menuRect.width - 8);
+    
+    // Calcular Y (vertical)
+    const preferDownY = r.bottom + 10;
+    const downFits = preferDownY + menuRect.height + 8 <= window.innerHeight;
+    let y;
+    
+    if(downFits){
+      y = preferDownY;
+    }else{
+      y = clamp(r.top - 10 - menuRect.height, 8, window.innerHeight - menuRect.height - 8);
+    }
+    
+    // Aplicar posição
+    modeMenu.style.left = x + "px";
+    modeMenu.style.top = y + "px";
+    
+    // Remover visibility:hidden
+    modeMenu.style.visibility = "";
+  });
+}
+function closeModeMenu(){
+  modeMenu.classList.remove("show");
+  modeMenu.setAttribute("aria-hidden","true");
+}
+function syncModeMenu(){
+  modeOptions.innerHTML = "";
+  const modes = ["Rápido", "📈 Growth", "✍️ Copy", "💻 Dev", "📊 Analytics", "🚀 Launch"];
+  const currentMode = getMode();
+  for(const m of modes){
+    const btn = document.createElement("button");
+    btn.className = "toolBtn" + (m===currentMode ? " danger" : "");
+    btn.style.cssText = "width:100%; text-align:left; justify-content:flex-start;";
+    btn.textContent = m + (m===currentMode ? " ✓" : "");
+    btn.type = "button";
+    btn.onclick = ()=>{
+      state.prefs.mode = m;
+      saveState();
+      updateModeUI();
+      closeModeMenu();
+      log("Modo alterado: " + m);
+    };
+    modeOptions.appendChild(btn);
+  }
+  modeNow.textContent = currentMode || "—";
+}
+function updateModeUI(){
+  const mode = getMode();
+  const btnLabel = btnMode.querySelector("span:first-child");
+  if(btnLabel) btnLabel.textContent = mode;
+  if(homeModeBtn) homeModeBtn.textContent = mode + " ▾";
+  modeBadge.textContent = "Modo: " + mode;
+}
+modeCloseBtn.addEventListener("click", closeModeMenu);
+btnMode.addEventListener("click", ()=>openModeMenu(btnMode));
+homeModeBtn.addEventListener("click", ()=>openModeMenu(homeModeBtn));
+document.addEventListener("click", (e)=>{
+  if(modeMenu.classList.contains("show")){
+    const inside = modeMenu.contains(e.target);
+    const btn = (e.target === btnMode) || btnMode.contains(e.target) || (e.target === homeModeBtn) || homeModeBtn.contains(e.target);
+    if(!inside && !btn) closeModeMenu();
+  }
+});
+
+/* ===========================
+   LOGS
+=========================== */
+function log(line){
+  const ts = new Date().toLocaleTimeString();
+  logs.push(`[${ts}] ${line}`);
+  if(logs.length > LOG_LIMIT) logs = logs.slice(-LOG_LIMIT);
+  renderLogsUI();
+}
+function clearLogs(){
+  logs = [];
+  renderLogsUI();
+}
+function renderLogsUI(){
+  logsPre.textContent = logs.length ? logs.join("\n") : "(vazio)";
+}
+function openLogs(){
+  renderLogsUI();
+  openOverlay(logsOverlay);
+}
+function closeLogs(){ closeOverlay(logsOverlay); }
+
+logsCopyBtn.addEventListener("click", async ()=>{
+  const text = logs.length ? logs.join("\n") : "";
+  if(!text) return alert("Sem logs pra copiar.");
+  try{
+    await navigator.clipboard.writeText(text);
+    alert("Logs copiados ✅");
+  }catch{
+    alert("Não consegui copiar (permissão do navegador).");
+  }
+});
+logsClearBtn.addEventListener("click", ()=>{
+  clearLogs();
+  log("Logs limpos.");
+});
+logsCloseBtn.addEventListener("click", closeLogs);
+
+/* ===========================
+   STORAGE
+=========================== */
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(!parsed.prefs) parsed.prefs = defaultPrefs();
+      if(typeof parsed.prefs.autoScroll !== "boolean") parsed.prefs.autoScroll = true;
+      if(typeof parsed.prefs.limitRender !== "boolean") parsed.prefs.limitRender = true;
+      if(!parsed.prefs.theme) parsed.prefs.theme = "dark";
+      if(!parsed.prefs.api) parsed.prefs.api = defaultPrefs().api;
+      if(typeof parsed.prefs.model !== "string") parsed.prefs.model = "";
+      if(!parsed.prefs.mode) parsed.prefs.mode = "Rápido";
+      if(!Array.isArray(parsed.chats)) parsed.chats = [];
+      return parsed;
+    }
+    return { activeChatId:null, chats:[], prefs: defaultPrefs() };
+  }catch{
+    return { activeChatId:null, chats:[], prefs: defaultPrefs() };
+  }
+}
+function saveState(){
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+}
+
+/* ===========================
+   HELPERS
+=========================== */
+function uid(prefix){
+  return prefix + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,6);
+}
+function smartTitle(text){
+  const stop = new Set(["o","a","os","as","de","da","do","das","dos","e","pra","para","com","um","uma","que","na","no","em","por","como","isso","essa","esse"]);
+  const words = text.toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu,"")
+    .split(/\s+/)
+    .filter(w=>w && !stop.has(w))
+    .slice(0,10);
+  let t = words.join(" ");
+  t = t ? (t[0].toUpperCase()+t.slice(1)) : "Conversa rápida";
+  if(t.length>42) t = t.slice(0,42).trim()+"…";
+  return t;
+}
+function fmtBytes(bytes){
+  const n = Number(bytes||0);
+  if(n < 1024) return n + " B";
+  const kb = n/1024;
+  if(kb < 1024) return kb.toFixed(1) + " KB";
+  const mb = kb/1024;
+  if(mb < 1024) return mb.toFixed(1) + " MB";
+  const gb = mb/1024;
+  return gb.toFixed(1) + " GB";
+}
+
+function getActiveChat(){
+  return state.chats.find(c=>c.id===state.activeChatId) || null;
+}
+function ensureChat(){
+  if(state.activeChatId && getActiveChat()) return getActiveChat();
+  newChat();
+  return getActiveChat();
+}
+function chatHasUser(chat){
+  return !!(chat && Array.isArray(chat.messages) && chat.messages.some(m => m.role === "user"));
+}
+
+/* ===========================
+   OVERLAY UTILS
+=========================== */
+function openOverlay(el){
+  el.classList.add("show");
+  el.setAttribute("aria-hidden","false");
+}
+function closeOverlay(el){
+  el.classList.remove("show");
+  el.setAttribute("aria-hidden","true");
+}
+function setupOverlayCloseOnOutside(overlayEl){
+  overlayEl.addEventListener("click", (e)=>{
+    if(e.target === overlayEl) closeOverlay(overlayEl);
+  });
+}
+setupOverlayCloseOnOutside(logsOverlay);
+setupOverlayCloseOnOutside(cfgOverlay);
+
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape"){
+    if(logsOverlay.classList.contains("show")) closeLogs();
+    if(cfgOverlay.classList.contains("show")) closeCfg();
+    if(toolsMenu.classList.contains("show")) closeToolsMenu();
+    hideCtxMenu();
+  }
+});
+
+/* ===========================
+   HOME / BOTTOM
+=========================== */
+function updateHomeAndBottom(){
+  const chat = getActiveChat();
+  const started = chatHasUser(chat);
+  homeNameEl.textContent = "Guilherme";
+
+  if(!started){
+    homeEl.classList.add("show");
+    bottomComposer.classList.add("hidden");
+  }else{
+    homeEl.classList.remove("show");
+    bottomComposer.classList.remove("hidden");
+  }
+}
+
+/* ===========================
+   SIDEBAR rail/open
+=========================== */
+document.getElementById("btnToggleRail").addEventListener("click", ()=> sidebar.classList.toggle("rail"));
+document.getElementById("railHistory").addEventListener("click", ()=> sidebar.classList.remove("rail"));
+
+document.getElementById("railCfg").addEventListener("click", ()=>{
+  sidebar.classList.remove("rail");
+  openCfg();
+});
+document.getElementById("railNew").addEventListener("click", newChat);
+
+document.getElementById("railTrash").addEventListener("click", async ()=>{
+  const ok = await confirmBottom({
+    title:"Apagar tudo?",
+    desc:"Isso apaga TODAS as conversas (não tem volta).",
+    okText:"Apagar tudo",
+    cancelText:"Cancelar",
+    danger:true
+  });
+  if(!ok) return;
+  state = { activeChatId:null, chats:[], prefs: state.prefs || defaultPrefs() };
+  saveState();
+  renderAll();
+  log("Histórico apagado");
+});
+
+document.getElementById("btnNewChat").addEventListener("click", newChat);
+
+document.getElementById("btnClearAll").addEventListener("click", async ()=>{
+  const ok = await confirmBottom({
+    title:"Apagar tudo?",
+    desc:"Isso apaga TODAS as conversas (não tem volta).",
+    okText:"Apagar tudo",
+    cancelText:"Cancelar",
+    danger:true
+  });
+  if(!ok) return;
+  state = { activeChatId:null, chats:[], prefs: state.prefs || defaultPrefs() };
+  saveState();
+  renderAll();
+  log("Histórico apagado");
+});
+
+btnLogs.addEventListener("click", openLogs);
+btnCfg.addEventListener("click", openCfg);
+btnBackup.addEventListener("click", ()=>{ openCfg(); });
+
+sbSearchInput.addEventListener("input", ()=>renderHistory());
+
+/* tools buttons */
+btnTools.addEventListener("click", ()=>openToolsMenu(btnTools));
+homeToolsBtn.addEventListener("click", ()=>openToolsMenu(homeToolsBtn));
+
+/* ===========================
+   CONFIG MODAL
+=========================== */
+function syncCfgUI(){
+  cfgTheme.value = state.prefs.theme || "dark";
+  cfgApi.value = state.prefs.api || defaultPrefs().api;
+  cfgAutoScroll.value = String(!!state.prefs.autoScroll);
+  cfgLimitRender.value = String(!!state.prefs.limitRender);
+}
+function openCfg(){
+  syncCfgUI();
+  openOverlay(cfgOverlay);
+}
+function closeCfg(){ closeOverlay(cfgOverlay); }
+
+cfgCloseBtn.addEventListener("click", closeCfg);
+
+cfgSaveBtn.addEventListener("click", ()=>{
+  state.prefs.theme = cfgTheme.value === "light" ? "light" : "dark";
+  state.prefs.api = (cfgApi.value || defaultPrefs().api).trim();
+  state.prefs.autoScroll = cfgAutoScroll.value === "true";
+  state.prefs.limitRender = cfgLimitRender.value === "true";
+  saveState();
+  applyTheme(state.prefs.theme);
+  renderChat();
+  renderHistory();
+  log("Config salva.");
+  closeCfg();
+  loadModelsFromBackend();
+});
+
+/* export/import */
+function downloadFile(filename, content, type="application/json"){
+  const blob = new Blob([content], {type});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+exportJsonBtn.addEventListener("click", ()=>{
+  const payload = JSON.stringify(state, null, 2);
+  downloadFile("devset_backup.json", payload, "application/json");
+  log("Export JSON gerado.");
+});
+
+importJsonBtn.addEventListener("click", ()=> importFile.click());
+
+importFile.addEventListener("change", async ()=>{
+  const file = importFile.files?.[0];
+  importFile.value = "";
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    if(!parsed || typeof parsed !== "object") throw new Error("Formato inválido");
+    if(!Array.isArray(parsed.chats)) throw new Error("Sem 'chats'");
+    if(!parsed.prefs) parsed.prefs = defaultPrefs();
+    state = parsed;
+    if(!state.prefs.theme) state.prefs.theme = "dark";
+    if(!state.prefs.api) state.prefs.api = defaultPrefs().api;
+    if(typeof state.prefs.autoScroll !== "boolean") state.prefs.autoScroll = true;
+    if(typeof state.prefs.limitRender !== "boolean") state.prefs.limitRender = true;
+    if(typeof state.prefs.model !== "string") state.prefs.model = "";
+    saveState();
+    applyTheme(state.prefs.theme);
+    renderAll();
+    log("Import JSON OK.");
+    alert("Importado ✅");
+    loadModelsFromBackend();
+  }catch(err){
+    alert("Falha ao importar: " + err.message);
+    log("Import falhou: " + err.message);
+  }
+});
+
+exportMdBtn.addEventListener("click", ()=>{
+  const chat = getActiveChat();
+  if(!chat) return alert("Nenhuma conversa ativa.");
+  const md = exportChatToMarkdown(chat);
+  downloadFile((chat.title || "chat") + ".md", md, "text/markdown");
+  log("Export MD gerado.");
+});
+
+/* ===========================
+   UPLOAD (backend /upload)
+=========================== */
+function openUpload(){
+  fileInput.click();
+}
+homePlus.addEventListener("click", openUpload);
+btnPlus.addEventListener("click", openUpload);
+
+async function uploadOneFile(file){
+  const base = getAPIBase();
+  const fd = new FormData();
+  fd.append("file", file);
+
+  const res = await fetch(base + "/upload", { method:"POST", body: fd, credentials: 'include' });
+  if(!res.ok) throw new Error("Upload falhou HTTP " + res.status);
+  const j = await res.json();
+  if(!j.file_id) throw new Error("Backend não retornou file_id");
+  return j.file_id;
+}
+
+function isImageMime(mime){
+  return (mime||"").toLowerCase().startsWith("image/");
+}
+
+function renderAttachments(){
+  const rows = [attachRow, homeAttachRow];
+  for(const row of rows){
+    row.innerHTML = "";
+    if(!pendingUploads.length){
+      row.classList.remove("show");
+      continue;
+    }
+    row.classList.add("show");
+
+    pendingUploads.forEach((a, idx)=>{
+      const chip = document.createElement("div");
+      chip.className = "attachChip";
+
+      const thumb = document.createElement("div");
+      thumb.className = "attachThumb";
+      if(a.isImage && a.previewUrl){
+        const img = document.createElement("img");
+        img.src = a.previewUrl;
+        img.alt = a.name || "imagem";
+        thumb.appendChild(img);
+      }else{
+        thumb.textContent = "📎";
+      }
+
+      const meta = document.createElement("div");
+      meta.className = "attachMeta";
+      const name = document.createElement("div");
+      name.className = "attachName";
+      name.textContent = a.name || "arquivo";
+      const sub = document.createElement("div");
+      sub.className = "attachSub";
+      sub.textContent = `${a.mime || "—"} • ${fmtBytes(a.size)}`;
+      meta.appendChild(name);
+      meta.appendChild(sub);
+
+      const rm = document.createElement("button");
+      rm.className = "attachRemove";
+      rm.type = "button";
+      rm.title = "Remover";
+      rm.textContent = "✕";
+      rm.onclick = ()=>{
+        if(pendingUploads[idx]?.previewUrl) URL.revokeObjectURL(pendingUploads[idx].previewUrl);
+        pendingUploads.splice(idx,1);
+        renderAttachments();
+      };
+
+      chip.appendChild(thumb);
+      chip.appendChild(meta);
+      chip.appendChild(rm);
+      row.appendChild(chip);
+    });
+  }
+}
+
+fileInput.addEventListener("change", async ()=>{
+  const files = Array.from(fileInput.files || []);
+  fileInput.value = "";
+  if(!files.length) return;
+
+  setStreamingUI(true);
+  log("Upload iniciado (" + files.length + " arquivo(s))…");
+
+  try{
+    for(const f of files){
+      const previewUrl = isImageMime(f.type) ? URL.createObjectURL(f) : "";
+      const file_id = await uploadOneFile(f);
+
+      pendingUploads.push({
+        file_id,
+        name: f.name,
+        mime: f.type || "",
+        size: f.size || 0,
+        isImage: isImageMime(f.type),
+        previewUrl
+      });
+
+      log("Upload OK: " + f.name + " -> " + file_id);
+      renderAttachments();
+    }
+  }catch(err){
+    log("Upload erro: " + err.message);
+    alert("Falha no upload: " + err.message);
+  }finally{
+    setStreamingUI(false);
+  }
+});
+
+/* ===========================
+   CRUD
+=========================== */
+function newChat(){
+  const id = uid("c");
+  const now = Date.now();
+  const chat = { id, title:"Nova conversa", pinned:false, createdAt: now, updatedAt: now, messages: [] };
+  state.chats.push(chat);
+  state.activeChatId = id;
+  saveState();
+  renderAll();
+  log("Novo chat criado");
+}
+
+function loadChat(id){
+  state.activeChatId = id;
+  saveState();
+  renderAll();
+  log("Chat carregado: " + id);
+}
+
+async function deleteChat(id){
+  const chat = state.chats.find(c=>c.id===id);
+  const name = chat?.title || "Conversa";
+
+  const ok = await confirmBottom({
+    title:"Apagar conversa?",
+    desc:`Apagar "${name}"?`,
+    okText:"Apagar",
+    cancelText:"Cancelar",
+    danger:true
+  });
+  if(!ok) return;
+
+  state.chats = state.chats.filter(c=>c.id!==id);
+  if(state.activeChatId === id){
+    state.activeChatId = state.chats[0]?.id || null;
+  }
+  saveState();
+  renderAll();
+  log("Chat apagado");
+}
+
+function renameChat(id){
+  const chat = state.chats.find(c=>c.id===id);
+  if(!chat) return;
+  const next = prompt("Novo nome da conversa:", chat.title || "Conversa");
+  if(next === null) return;
+  const t = (next || "").trim();
+  chat.title = t || "Conversa";
+  chat.updatedAt = Date.now();
+  saveState();
+  renderHistory();
+  renderChat();
+  log("Chat renomeado");
+}
+
+function togglePinChat(id){
+  const chat = state.chats.find(c=>c.id===id);
+  if(!chat) return;
+  chat.pinned = !chat.pinned;
+  chat.updatedAt = Date.now();
+  saveState();
+  renderHistory();
+  log(chat.pinned ? "Chat fixado" : "Chat desafixado");
+}
+
+/* ===========================
+   HISTORY + MENU (…)
+=========================== */
+function renderHistory(){
+  chatListEl.innerHTML = "";
+  const q = (sbSearchInput.value || "").trim().toLowerCase();
+
+  const sorted = [...state.chats].sort((a,b)=>{
+    const ap = !!a.pinned, bp = !!b.pinned;
+    if(ap !== bp) return ap ? -1 : 1;
+    return (b.updatedAt||0)-(a.updatedAt||0);
+  });
+
+  const filtered = q
+    ? sorted.filter(c => {
+        const t = (c.title||"").toLowerCase();
+        if(t.includes(q)) return true;
+        const last = (c.messages?.[c.messages.length-1]?.content||"").toLowerCase();
+        return last.includes(q);
+      })
+    : sorted;
+
+  countChatsEl.textContent = filtered.length;
+
+  filtered.forEach(c=>{
+    const div = document.createElement("div");
+    div.className = "item" + (c.id===state.activeChatId ? " active":"");
+    div.onclick = ()=>loadChat(c.id);
+
+    const dot = document.createElement("div");
+    dot.className = "dot";
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+
+    const name = document.createElement("div");
+    name.className = "name";
+    name.textContent = c.title || "Conversa rápida";
+
+    if(c.pinned){
+      const pin = document.createElement("span");
+      pin.className = "pinBadge";
+      pin.textContent = "Fixada";
+      name.appendChild(pin);
+    }
+
+    const preview = document.createElement("div");
+    preview.className = "preview";
+    const last = (c.messages && c.messages.length) ? c.messages[c.messages.length-1].content : "";
+    preview.textContent = last ? last.replace(/\s+/g," ").slice(0,80) : "Sem mensagens";
+
+    meta.appendChild(name);
+    meta.appendChild(preview);
+
+    const actions = document.createElement("div");
+    actions.className = "itemActions";
+
+    const del = document.createElement("button");
+    del.className = "miniBtn danger";
+    del.textContent = "🗑";
+    del.title = "Apagar";
+    del.onclick = (e)=>{ e.stopPropagation(); deleteChat(c.id); };
+
+    const more = document.createElement("button");
+    more.className = "miniBtn more";
+    more.textContent = "⋯";
+    more.title = "Mais";
+    more.onclick = (e)=>{
+      e.stopPropagation();
+      showCtxMenu(e.clientX, e.clientY, c.id);
+    };
+
+    actions.appendChild(del);
+    actions.appendChild(more);
+
+    div.appendChild(dot);
+    div.appendChild(meta);
+    div.appendChild(actions);
+
+    chatListEl.appendChild(div);
+  });
+}
+
+function hideCtxMenu(){
+  ctxMenu.classList.remove("show");
+  ctxMenu.setAttribute("aria-hidden","true");
+  ctxChatId = null;
+}
+
+function showCtxMenu(x, y, chatId){
+  ctxChatId = chatId;
+  ctxMenu.innerHTML = "";
+
+  const chat = state.chats.find(c=>c.id===chatId);
+  const isPinned = !!chat?.pinned;
+
+  const addItem = (label, right, cls, fn)=>{
+    const it = document.createElement("div");
+    it.className = "ctxItem" + (cls ? " " + cls : "");
+    it.innerHTML = `<span>${label}</span><span style="opacity:.75">${right||""}</span>`;
+    it.onclick = ()=>{
+      hideCtxMenu();
+      fn?.();
+    };
+    ctxMenu.appendChild(it);
+  };
+  const sep = ()=>{
+    const s = document.createElement("div");
+    s.className = "ctxSep";
+    ctxMenu.appendChild(s);
+  };
+
+  addItem(isPinned ? "Desafixar" : "Fixar", "📌", "", ()=>togglePinChat(chatId));
+  addItem("Renomear", "✎", "", ()=>renameChat(chatId));
+  addItem("Exportar MD", "📝", "", ()=>{
+    const chat = state.chats.find(c=>c.id===chatId);
+    if(!chat) return;
+    const md = exportChatToMarkdown(chat);
+    downloadFile((chat.title || "chat") + ".md", md, "text/markdown");
+    log("Export MD (menu) gerado.");
+  });
+  sep();
+  addItem("Apagar", "🗑", "danger", ()=>deleteChat(chatId));
+
+  ctxMenu.style.left = x + "px";
+  ctxMenu.style.top = y + "px";
+  ctxMenu.classList.add("show");
+  ctxMenu.setAttribute("aria-hidden","false");
+
+  const r = ctxMenu.getBoundingClientRect();
+  let nx = x, ny = y;
+  if(r.right > window.innerWidth - 8) nx = Math.max(8, window.innerWidth - r.width - 8);
+  if(r.bottom > window.innerHeight - 8) ny = Math.max(8, window.innerHeight - r.height - 8);
+  ctxMenu.style.left = nx + "px";
+  ctxMenu.style.top = ny + "px";
+}
+
+document.addEventListener("click", (e)=>{
+  if(ctxMenu.classList.contains("show") && !ctxMenu.contains(e.target)) hideCtxMenu();
+});
+
+/* ===========================
+   MARKDOWN + CODEBLOCKS
+=========================== */
+function escapeHtml(s){
+  return (s||"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+function normalizeModelText(s){
+  return (s||"").replace(/\r\n/g, "\n");
+}
+function renderMarkdownLite(raw){
+  let s = normalizeModelText(raw);
+  const parts = s.split("```");
+  let html = "";
+
+  for(let i=0;i<parts.length;i++){
+    const chunk = parts[i];
+
+    if(i % 2 === 1){
+      // Code block
+      const lines = chunk.split("\n");
+      let lang = "";
+      let codeLines = lines;
+      if(lines.length && /^[a-z0-9#+._-]{1,20}$/i.test(lines[0].trim())){
+        lang = lines[0].trim();
+        codeLines = lines.slice(1);
+      }
+      const code = escapeHtml(codeLines.join("\n").replace(/\n+$/,""));
+      const safeLang = escapeHtml(lang || "code");
+      const blockId = uid("code");
+      html += `<div class="codeBlock" data-code-id="${blockId}"><div class="codeHead"><span>${safeLang}</span><button class="actionBtn" data-copy-code="${blockId}" type="button">📋 Copiar</button></div><pre><code>${code}</code></pre></div>`;
+      continue;
+    }
+
+    // Regular markdown content
+    let t = escapeHtml(chunk);
+    
+    // Process inline formatting (order matters - code must be before bold/italic)
+    t = t.replace(/`([^`]+?)`/g, '<code class="inline">$1</code>');
+    t = t.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    t = t.replace(/\*([^\*]+?)\*/g, "<em>$1</em>");
+    t = t.replace(/__(.+?)__/g, "<strong>$1</strong>");
+    t = t.replace(/_([^_]+?)_/g, "<em>$1</em>");
+
+    const lines = t.split("\n");
+    let inUL = false;
+    let inOL = false;
+
+    for(let j = 0; j < lines.length; j++){
+      const line = lines[j];
+      const trimmed = line.trim();
+      
+      // Skip truly empty lines (don't create <p></p>)
+      if(!trimmed){
+        continue;
+      }
+
+      // Heading detection (#, ##, ###, ####)
+      const headingMatch = trimmed.match(/^(#{1,4})\s+(.+)$/);
+      if(headingMatch){
+        if(inUL){ html += "</ul>"; inUL = false; }
+        if(inOL){ html += "</ol>"; inOL = false; }
+        const level = headingMatch[1].length;
+        const content = headingMatch[2];
+        html += `<h${level}>${content}</h${level}>`;
+        continue;
+      }
+
+      // Unordered list item (-, *, •)
+      const ulMatch = trimmed.match(/^[-•*]\s+(.+)$/);
+      if(ulMatch){
+        if(inOL){ html += "</ol>"; inOL = false; }
+        if(!inUL){ html += "<ul>"; inUL = true; }
+        const content = ulMatch[1];
+        html += `<li>${content}</li>`;
+        continue;
+      }
+
+      // Ordered list item (1., 2., etc)
+      const olMatch = trimmed.match(/^\d+\.\s+(.+)$/);
+      if(olMatch){
+        if(inUL){ html += "</ul>"; inUL = false; }
+        if(!inOL){ html += "<ol>"; inOL = true; }
+        const content = olMatch[1];
+        html += `<li>${content}</li>`;
+        continue;
+      }
+
+      // Regular paragraph
+      if(inUL){ html += "</ul>"; inUL = false; }
+      if(inOL){ html += "</ol>"; inOL = false; }
+      html += `<p>${trimmed}</p>`;
+    }
+
+    // Close any open lists
+    if(inUL) html += "</ul>";
+    if(inOL) html += "</ol>";
+  }
+
+  return html;
+}
+
+document.addEventListener("click", async (e)=>{
+  const btn = e.target?.closest?.("[data-copy-code]");
+  if(!btn) return;
+  const id = btn.getAttribute("data-copy-code");
+  const block = document.querySelector(`.codeBlock[data-code-id="${id}"]`);
+  const code = block?.querySelector("code")?.textContent || "";
+  if(!code) return;
+  try{
+    await navigator.clipboard.writeText(code);
+    btn.textContent = "✅ Copiado";
+    setTimeout(()=>btn.textContent="📋 Copiar", 900);
+  }catch{
+    alert("Não consegui copiar (permissão do navegador).");
+  }
+});
+
+/* ===========================
+   CHAT RENDER
+=========================== */
+function renderMessageAttachments(m, intoEl){
+  const atts = Array.isArray(m.attachments) ? m.attachments : [];
+  if(!atts.length) return;
+
+  const box = document.createElement("div");
+  box.className = "msgAttach";
+
+  atts.forEach(a=>{
+    const chip = document.createElement("div");
+    chip.className = "attachChip";
+
+    const thumb = document.createElement("div");
+    thumb.className = "attachThumb";
+    if(a.isImage && a.previewUrl){
+      const img = document.createElement("img");
+      img.src = a.previewUrl;
+      img.alt = a.name || "imagem";
+      thumb.appendChild(img);
+    }else{
+      thumb.textContent = "📎";
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "attachMeta";
+    const name = document.createElement("div");
+    name.className = "attachName";
+    name.textContent = a.name || "arquivo";
+    const sub = document.createElement("div");
+    sub.className = "attachSub";
+    sub.textContent = `${a.mime || "—"} • ${fmtBytes(a.size)}`;
+    meta.appendChild(name);
+    meta.appendChild(sub);
+
+    chip.appendChild(thumb);
+    chip.appendChild(meta);
+    box.appendChild(chip);
+  });
+
+  intoEl.appendChild(box);
+}
+
+function createMsgNode(m, idx){
+  const wrap = document.createElement("div");
+  wrap.className = "msg " + (m.role==="user" ? "user" : "ai");
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+
+  if(m.role!=="user"){
+    const tag = document.createElement("div");
+    tag.className = "aiTag";
+    tag.textContent = "✨ Devset IA";
+    bubble.appendChild(tag);
+  }
+
+  const content = document.createElement("div");
+  content.className = "md";
+  content.innerHTML = (m.role==="user")
+    ? "<p>"+escapeHtml(m.content||"")+"</p>"
+    : renderMarkdownLite(m.content||"");
+
+  bubble.appendChild(content);
+  renderMessageAttachments(m, bubble);
+
+  const actions = document.createElement("div");
+  actions.className = "msgActions";
+
+  const copyBtn = document.createElement("button");
+  copyBtn.className = "actionBtn";
+  copyBtn.textContent = "📋 Copiar";
+  copyBtn.type = "button";
+  copyBtn.onclick = async ()=>{
+    const txt = m.content || "";
+    if(!txt) return;
+    try{
+      await navigator.clipboard.writeText(txt);
+      copyBtn.textContent = "✅ Copiado";
+      setTimeout(()=>copyBtn.textContent="📋 Copiar", 900);
+    }catch{
+      alert("Não consegui copiar (permissão).");
+    }
+  };
+  actions.appendChild(copyBtn);
+
+  if(m.role === "user"){
+    const editBtn = document.createElement("button");
+    editBtn.className = "actionBtn";
+    editBtn.textContent = "✎ Editar";
+    editBtn.type = "button";
+    editBtn.onclick = ()=>openEditBox(wrap, idx, m.content||"");
+    actions.appendChild(editBtn);
+  }else{
+    const chat = getActiveChat();
+    const isLast = chat && (idx === (chat.messages.length - 1));
+    if(isLast){
+      const regen = document.createElement("button");
+      regen.className = "actionBtn";
+      regen.textContent = "♻ Regenerar";
+      regen.type = "button";
+      regen.onclick = ()=>regenerateLast();
+      actions.appendChild(regen);
+    }
+  }
+
+  bubble.appendChild(actions);
+  wrap.appendChild(bubble);
+
+  wrap.__contentEl = content;
+  wrap.__bubbleEl = bubble;
+  return wrap;
+}
+
+function openEditBox(msgWrap, msgIndex, currentText){
+  const existing = msgWrap.querySelector(".editBox");
+  if(existing) return;
+
+  const box = document.createElement("div");
+  box.className = "editBox";
+
+  const ta = document.createElement("textarea");
+  ta.value = currentText;
+
+  const row = document.createElement("div");
+  row.className = "editRow";
+
+  const cancel = document.createElement("button");
+  cancel.className = "actionBtn";
+  cancel.textContent = "Cancelar";
+  cancel.type = "button";
+  cancel.onclick = ()=> box.remove();
+
+  const save = document.createElement("button");
+  save.className = "actionBtn";
+  save.textContent = "Salvar & Reenviar";
+  save.type = "button";
+  save.onclick = ()=>{
+    const text = (ta.value||"").trim();
+    if(!text) return alert("Texto vazio.");
+    editAndResendFrom(msgIndex, text);
+  };
+
+  row.appendChild(cancel);
+  row.appendChild(save);
+
+  box.appendChild(ta);
+  box.appendChild(row);
+
+  msgWrap.__bubbleEl.appendChild(box);
+  ta.focus();
+}
+
+function renderChat(){
+  const chat = getActiveChat();
+  chatEl.innerHTML = "";
+
+  updateHomeAndBottom();
+
+  if(!chat){
+    chatTitleEl.textContent = "Nova conversa";
+    return;
+  }
+
+  chatTitleEl.textContent = chat.title || "Conversa rápida";
+
+  let msgs = chat.messages || [];
+  if(state.prefs.limitRender && msgs.length > LIMIT_RENDER){
+    msgs = msgs.slice(-LIMIT_RENDER);
+    const info = document.createElement("div");
+    info.style.cssText = "max-width:920px;margin:0 auto 14px;color:rgba(255,255,255,.55);font-size:12px;";
+    info.textContent = `Mostrando as últimas ${LIMIT_RENDER} mensagens (total: ${chat.messages.length}).`;
+    chatEl.appendChild(info);
+  }
+
+  const baseIndex = (chat.messages.length - msgs.length);
+  msgs.forEach((m, i)=>{
+    chatEl.appendChild(createMsgNode(m, baseIndex + i));
+  });
+
+  if(state.prefs.autoScroll) chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function renderAll(){
+  renderHistory();
+  renderChat();
+  renderAttachments();
+}
+
+/* ===========================
+   INPUT UX
+=========================== */
+function autoGrow(el){
+  el.style.height = "44px";
+  el.style.height = Math.min(el.scrollHeight, 140) + "px";
+}
+homeInput.addEventListener("input", ()=>autoGrow(homeInput));
+inputEl.addEventListener("input", ()=>autoGrow(inputEl));
+
+function handleEnterSend(e, which){
+  if(e.key==="Enter" && !e.shiftKey){
+    e.preventDefault();
+    if(which==="home") sendFromHome();
+    else sendFromBottom();
+  }
+}
+homeInput.addEventListener("keydown", (e)=>handleEnterSend(e,"home"));
+inputEl.addEventListener("keydown", (e)=>handleEnterSend(e,"bottom"));
+homeSend.addEventListener("click", sendFromHome);
+btnSend.addEventListener("click", sendFromBottom);
+
+/* ===========================
+   ✅ SSE PARSER ROBUSTO
+=========================== */
+function parseSSEChunkToEvents(text){
+  const s = (text || "").replace(/\r\n/g, "\n");
+  const rawEvents = s.split("\n\n");
+
+  const out = [];
+  for(const ev of rawEvents){
+    const lines = ev.split("\n").filter(Boolean);
+    if(!lines.length) continue;
+
+    let eventName = "";
+    const dataLines = [];
+
+    for(const line of lines){
+      if(line.startsWith("event:")){
+        eventName = line.slice(6).trim();
+        continue;
+      }
+      if(line.startsWith("data:")){
+        dataLines.push(line.slice(5).replace(/^\s?/, ""));
+        continue;
+      }
+    }
+
+    if(!dataLines.length) continue;
+    const data = dataLines.join("\n");
+    out.push({ event: eventName, data });
+  }
+  return out;
+}
+
+/* ===========================
+   STREAMING SSE (sem flicker)
+=========================== */
+let rafId = null;
+let pending = "";
+
+function setStreamingUI(on){
+  homeSend.disabled = on;
+  btnSend.disabled = on;
+  btnStop.style.display = on ? "inline-block" : "none";
+  statusEl.textContent = on ? "Gerando…" : "Online";
+  sbFooterHint.textContent = on ? "Gerando…" : "Online";
+}
+btnStop.addEventListener("click", ()=>{
+  if(abortCtrl){
+    abortCtrl.abort();
+    log("Streaming abortado pelo usuário");
+  }
+});
+
+function scheduleFlush(updateFn){
+  if(rafId) return;
+  rafId = requestAnimationFrame(()=>{
+    rafId = null;
+    if(!pending) return;
+    const chunk = pending;
+    pending = "";
+    updateFn(chunk);
+  });
+}
+function appendAiChunk(aiMsg, aiNode, chunk){
+  aiMsg.content += chunk;
+  aiNode.__contentEl.innerHTML = renderMarkdownLite(aiMsg.content);
+}
+
+function ensureTypingIndicator(aiNode, show){
+  let el = aiNode.querySelector?.(".typing");
+  if(show){
+    if(el) return;
+    el = document.createElement("div");
+    el.className = "typing";
+    el.innerHTML = `<span>Digitando</span>
+      <span class="dotPulse"></span><span class="dotPulse"></span><span class="dotPulse"></span>`;
+    aiNode.__bubbleEl.insertBefore(el, aiNode.__bubbleEl.querySelector(".md"));
+  }else{
+    if(el) el.remove();
+  }
+}
+
+function buildHistoryForBackend(chat){
+  const msgs = Array.isArray(chat?.messages) ? chat.messages : [];
+  const last = msgs.slice(-12).filter(m => (m.role==="user" || m.role==="assistant") && typeof m.content === "string");
+  return last.map(m => ({ role: m.role, content: m.content }));
+}
+
+/* ✅ bloqueia imagem até o backend suportar visão */
+function hasImageUploads(){
+  return pendingUploads.some(u => u.isImage);
+}
+
+async function sendCore(text){
+  const chat = ensureChat();
+  const now = Date.now();
+
+  if((chat.title==="Nova conversa" || !chat.title) && chat.messages.length===0){
+    chat.title = smartTitle(text);
+  }
+
+  if(hasImageUploads()){
+    log("Imagem anexada: enviando file_ids (se backend não suportar visão, pode ignorar).");
+  }
+
+  const attached = pendingUploads.map(a => ({...a}));
+  const file_ids = attached.map(a => a.file_id);
+
+  pendingUploads.forEach(a=>{ if(a.previewUrl) URL.revokeObjectURL(a.previewUrl); });
+  pendingUploads = [];
+  renderAttachments();
+
+  const userMsg = { id: uid("m"), role:"user", content:text, ts: now, attachments: attached };
+  chat.messages.push(userMsg);
+  chat.updatedAt = now;
+
+  const aiMsg = { id: uid("m"), role:"assistant", content:"", ts: Date.now() };
+  chat.messages.push(aiMsg);
+  chat.updatedAt = Date.now();
+
+  saveState();
+
+  updateHomeAndBottom();
+  renderChat();
+  renderHistory();
+
+  const lastAiNode = chatEl.lastElementChild;
+  ensureTypingIndicator(lastAiNode, true);
+
+  abortCtrl = new AbortController();
+  setStreamingUI(true);
+  log("Conectando SSE…");
+
+  const t0 = performance.now();
+  let gotFirstToken = false;
+
+  try{
+    const API = getAPI();
+    const model = getModel();
+    const countImgs = attached.filter(a=>a.isImage).length;
+    log("Enviando… file_ids=" + file_ids.length + " images=" + countImgs);
+    log("Modelo: " + (model || "(padrão)"));
+    if(file_ids.length) log("Anexos: " + file_ids.length);
+
+    const history = buildHistoryForBackend(chat);
+
+    /* ✅ FIX PRINCIPAL:
+       - smart_memory no lugar de use_memory
+       - manda chat_id = chat.id
+       - manda user_id
+       - manda persona (instrução de modo)
+    */
+    const res = await fetch(API, {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Accept":"text/event-stream"
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        message: text,
+        user_id: "guilherme",
+        chat_id: chat.id,
+        smart_memory: true,
+        history,
+        file_ids,
+        model,
+        persona: getPersonaInstruction(getMode())
+      }),
+      signal: abortCtrl.signal
+    });
+    
+    if(!res.ok){
+      const errorText = await res.text();
+      
+      // Tratar erro 400 com modelo descontinuado
+      if(res.status === 400 && (errorText.includes("model_decommissioned") || errorText.includes("decommissioned") || isModelDecommissioned(model))){
+        if(lastAttemptedModel !== model){
+          log("Modelo descontinuado, trocando para llama-3.3-70b-versatile");
+          lastAttemptedModel = model;
+          state.prefs.model = "llama-3.3-70b-versatile";
+          saveState();
+          syncToolsMenu();
+          
+          // Remover última mensagem de IA (vazia) para fazer retry
+          if(chat.messages.length > 0 && chat.messages[chat.messages.length-1].role === "assistant"){
+            chat.messages.pop();
+            saveState();
+          }
+          
+          // Fazer retry com novo modelo
+          log("Reenviando com novo modelo…");
+          renderChat();
+          setStreamingUI(false);
+          abortCtrl = null;
+          sendCore(text);
+          return;
+        }else{
+          throw new Error("Modelo decommissioned mesmo após fallback");
+        }
+      }
+      
+      throw new Error("HTTP " + res.status);
+    }
+    
+    lastAttemptedModel = null;
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+
+    let buffer = "";
+
+    while(true){
+      const {done, value} = await reader.read();
+      if(done) break;
+
+      buffer += decoder.decode(value, {stream:true});
+
+      let idx;
+      while((idx = buffer.indexOf("\n\n")) !== -1){
+        const oneEventRaw = buffer.slice(0, idx);
+        buffer = buffer.slice(idx + 2);
+
+        const events = parseSSEChunkToEvents(oneEventRaw + "\n\n");
+        for(const ev of events){
+          const content = ev.data;
+
+          if(content === "[DONE]") continue;
+
+          if(content.startsWith("[meta]")) {
+            log(content);
+            continue;
+          }
+
+          if(!gotFirstToken){
+            gotFirstToken = true;
+            ensureTypingIndicator(lastAiNode, false);
+            log("TTFB: " + Math.round(performance.now() - t0) + "ms");
+          }
+
+          pending += content;
+          scheduleFlush((append)=>{
+            appendAiChunk(aiMsg, lastAiNode, append);
+            chat.updatedAt = Date.now();
+            saveState();
+            if(state.prefs.autoScroll) chatEl.scrollTop = chatEl.scrollHeight;
+          });
+        }
+      }
+    }
+
+    ensureTypingIndicator(lastAiNode, false);
+    log("Finalizado. chars=" + (aiMsg.content?.length || 0));
+  }catch(err){
+    ensureTypingIndicator(lastAiNode, false);
+    if(err.name === "AbortError"){
+      log("Parado.");
+    }else{
+      log("Erro: " + err.message);
+      aiMsg.content += "\n\n[ERRO] " + err.message;
+      if(lastAiNode?.__contentEl) lastAiNode.__contentEl.innerHTML = renderMarkdownLite(aiMsg.content);
+      saveState();
+    }
+  }finally{
+    setStreamingUI(false);
+    abortCtrl = null;
+  }
+
+  renderHistory();
+}
+
+function editAndResendFrom(userMsgIndex, newText){
+  const chat = getActiveChat();
+  if(!chat) return;
+
+  const target = chat.messages[userMsgIndex];
+  if(!target || target.role !== "user") return;
+
+  target.content = newText;
+  target.ts = Date.now();
+
+  chat.messages = chat.messages.slice(0, userMsgIndex + 1);
+  chat.updatedAt = Date.now();
+  saveState();
+
+  renderAll();
+  log("Mensagem editada. Reenviando…");
+  sendCore(newText);
+}
+
+function findLastUserMessage(){
+  const chat = getActiveChat();
+  if(!chat) return null;
+  for(let i=chat.messages.length-1; i>=0; i--){
+    if(chat.messages[i].role === "user") return { msg: chat.messages[i], index: i };
+  }
+  return null;
+}
+function regenerateLast(){
+  const chat = getActiveChat();
+  if(!chat) return;
+
+  const last = chat.messages[chat.messages.length - 1];
+  if(last?.role === "assistant"){
+    chat.messages.pop();
+  }
+  const lastUser = findLastUserMessage();
+  if(!lastUser) return alert("Não achei mensagem do usuário para regenerar.");
+
+  chat.updatedAt = Date.now();
+  saveState();
+  renderAll();
+  log("Regenerando resposta…");
+  sendCore(lastUser.msg.content);
+}
+
+function sendFromHome(){
+  const text = (homeInput.value || "").trim();
+  if(!text) return;
+  homeInput.value = "";
+  autoGrow(homeInput);
+  sendCore(text);
+}
+function sendFromBottom(){
+  const text = (inputEl.value || "").trim();
+  if(!text) return;
+  inputEl.value = "";
+  autoGrow(inputEl);
+  sendCore(text);
+}
+
+/* ===========================
+   EXPORT MD
+=========================== */
+function exportChatToMarkdown(chat){
+  const lines = [];
+  lines.push(`# ${chat.title || "Conversa"}`);
+  lines.push(`Modo: ${getMode()}`);
+  lines.push("");
+  for(const m of (chat.messages||[])){
+    if(m.role === "user"){
+      lines.push(`## Você`);
+      if(Array.isArray(m.attachments) && m.attachments.length){
+        lines.push(`(Anexos: ${m.attachments.map(a=>a.name).join(", ")})`);
+      }
+      lines.push(m.content || "");
+      lines.push("");
+    }else{
+      lines.push(`## Devset IA`);
+      lines.push(m.content || "");
+      lines.push("");
+    }
+  }
+  return lines.join("\n");
+}
+
+/* ===========================
+   SHORTCUTS
+=========================== */
+document.addEventListener("keydown", (e)=>{
+  const isMac = navigator.platform.toLowerCase().includes("mac");
+  const mod = isMac ? e.metaKey : e.ctrlKey;
+
+  if(!mod) return;
+
+  if(e.key.toLowerCase() === "k"){
+    e.preventDefault();
+    sidebar.classList.remove("rail");
+    sbSearchInput.focus();
+  }
+  if(e.key.toLowerCase() === "l"){
+    e.preventDefault();
+    openLogs();
+  }
+  if(e.key === "," ){
+    e.preventDefault();
+    openCfg();
+  }
+  if(e.key.toLowerCase() === "n"){
+    e.preventDefault();
+    newChat();
+  }
+});
+
+/* ===========================
+   INIT
+=========================== */
+if(!state.prefs) state.prefs = defaultPrefs();
+applyTheme(state.prefs.theme || "dark");
+
+/* Validar se modelo salvo está descontinuado */
+if(state.prefs.model && isModelDecommissioned(state.prefs.model)){
+  log("Modelo descontinuado detectado: " + state.prefs.model + ". Trocando para llama-3.3-70b-versatile");
+  state.prefs.model = "llama-3.3-70b-versatile";
+  saveState();
+}
+
+/* força default do Railway se o user ainda tiver localhost ou backend antigo salvo */
+if(
+  !state.prefs.api ||
+  /127\.0\.0\.1|localhost/i.test(state.prefs.api) ||
+  /devset-backend-production\.up\.railway\.app/i.test(state.prefs.api)
+){
+  state.prefs.api = RAILWAY_API_STREAM;
+  saveState();
+}
+
+if(!state.activeChatId && state.chats.length){
+  state.activeChatId = state.chats[0].id;
+  saveState();
+}
+
+/* ✅ Validar se modo salvo existe, senão usar padrão */
+if(!state.prefs.mode || !["Rápido", "📈 Growth", "✍️ Copy", "💻 Dev", "📊 Analytics", "🚀 Launch"].includes(state.prefs.mode)){
+  state.prefs.mode = "Rápido";
+  saveState();
+}
+
+renderAll();
+updateModeUI();
+log("UI v7 pronta 👾 (Railway default + upload + ferramentas + logs + modos)");
+
+loadModelsFromBackend();
+
+/* 
+========================================
+TESTE MANUAL - MODO ESPECIALISTA (Persona)
+========================================
+
+Como testar:
+
+1) ABRIR MENU DE MODO:
+   - Clique no botão "Rápido ▾" no bottom composer
+   - Ou no pill "Rápido ▾" na home screen
+   - Deve abrir um menu com 6 opções de modo
+
+2) TROCAR MODO:
+   - Selecione um modo (ex: "📈 Growth")
+   - O botão deve atualizar imediatamente
+   - O badge no topbar deve mudar ("Modo: 📈 Growth")
+   - O modo deve persistir ao recarregar a página
+
+3) ENVIAR MENSAGEM:
+   - Escreva uma pergunta
+   - Abra DevTools (F12) > Network
+   - Envie a mensagem
+   - Procure pela requisição POST /chat_stream
+   - Verifique no payload se o campo "persona" contém a instrução do modo
+   - Ex: {"message": "...", "persona": "Você é um Growth Strategist..."}
+
+4) EXPORTAR CONVERSA:
+   - Clique em "🗭 Exportar MD (chat)" na config modal
+   - Abra o arquivo .md
+   - Procure por "Modo: <modo>" no topo
+
+5) VERIFICAR PERSISTÊNCIA:
+   - Troque para um modelo diferente
+   - Recarregue a página (F5)
+   - O modo deve ser o mesmo anterior
+   - localStorage.getItem("devset_chats_v7") deve conter o modo em prefs
+
+Modos disponíveis:
+- Rápido: respostas curtas e diretas
+- 📈 Growth: Growth Strategist (aquisição, ativação, retenção, receita)
+- ✍️ Copy: Copywriter de performance (gancho, prova, benefício, CTA)
+- 💻 Dev: Dev Senior (código completo, debug, perguntas)
+- 📊 Analytics: Analista de dados (métricas, funil, tracking, KPIs)
+- 🚀 Launch: Especialista de lançamento (oferta, público, canais, checklist)
+*/
+</script>
+
+</body>
+</html>
