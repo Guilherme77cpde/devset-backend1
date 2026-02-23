@@ -1440,9 +1440,9 @@ html[data-theme="light"] .confirmBtn{
         </div>
 
         <div class="field">
-          <label for="cfgApi">API (chat_stream)</label>
-          <input id="cfgApi" placeholder="https://devset-backend1-production-0b6f.up.railway.app/chat_stream" />
-          <div class="smallHint">Se mudar o backend, muda aqui.</div>
+          <label for="cfgApi">API (BASE)</label>
+          <input id="cfgApi" placeholder="https://devset-backend1-production.up.railway.app" />
+          <div class="smallHint">/chat_stream é automático</div>
         </div>
 
         <div class="field">
@@ -1520,7 +1520,7 @@ const LIMIT_RENDER = 80;
 const LOG_LIMIT = 300;
 
 /* ✅ backend Railway (default) */
-const RAILWAY_API_STREAM = "https://devset-backend1-production-0b6f.up.railway.app";
+const RAILWAY_API_STREAM = "https://devset-backend1-production.up.railway.app";
 
 /* ===========================
    STATE
@@ -1693,6 +1693,9 @@ function getAPIBase(){
   const api = getAPI();
   // remove trailing /chat_stream if present, then strip trailing slashes
   return api.replace(/\/chat_stream\/?$/i, "").replace(/\/+$/i, "");
+}
+function getChatStreamURL(){
+  return getAPIBase() + "/chat_stream";
 }
 function getModel(){
   const m = (state.prefs?.model || "").trim();
@@ -3012,7 +3015,7 @@ async function sendCore(text){
   let gotFirstToken = false;
 
   try{
-    const API = getAPI();
+    const API = getChatStreamURL();
     const model = getModel();
     const countImgs = attached.filter(a=>a.isImage).length;
     log("Enviando… file_ids=" + file_ids.length + " images=" + countImgs);
