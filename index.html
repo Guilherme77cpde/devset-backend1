@@ -3022,6 +3022,7 @@ async function sendCore(text){
 
   try{
     const API = getChatStreamURL();
+    log("CHAT endpoint final: " + API);
     const model = getModel();
     const countImgs = attached.filter(a=>a.isImage).length;
     log("Enviando… file_ids=" + file_ids.length + " images=" + countImgs);
