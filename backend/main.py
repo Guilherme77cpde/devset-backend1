@@ -1,62 +1,33 @@
-import os
 import logging
-import asyncio
-from fastapi import FastAPI, Request
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .database import engine, Base
-from .routers import auth_router, chat_router, upload_router
-# ensure models imported for metadata
+
 from . import models  # noqa: F401
+from .database import Base, engine
+from .routers import auth_router, chat_router, upload_router
 
 logger = logging.getLogger("uvicorn.error")
 
-
-def parse_origins(env_value: str | None) -> list[str]:
-    if env_value is None:
-        return []
-    parts = [s.strip() for s in env_value.split(",") if s.strip()]
-    normalized: list[str] = []
-    for p in parts:
-        if p == "*":
-            # don't include wildcard when credentials are required
-            continue
-        # remove trailing slash(es) and surrounding whitespace
-        np = p.rstrip("/")
-        if np:
-            normalized.append(np)
-    return normalized
-
-
 app = FastAPI(title="Devset Backend")
 
-# configure CORS: read ALLOW_ORIGINS from env (comma separated)
-raw_allow = os.getenv("ALLOW_ORIGINS")
-if raw_allow is not None:
-    origins = parse_origins(raw_allow)
-else:
-    origins = [
-        "https://devset-backend1-production-0b6f.up.railway.app",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ]
-
-# ensure we never pass wildcard when credentials are enabled
+# MVP without authentication on frontend requests:
+# wildcard origins are allowed only when credentials are disabled.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
 @app.on_event("startup")
-async def on_startup():
+async def on_startup() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 
-# include routers
 app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(upload_router)
@@ -65,9 +36,3 @@ app.include_router(upload_router)
 @app.get("/")
 async def root():
     return {"status": "ok"}
-
-
-def _sse_data(text: str) -> str:
-    lines = (text or "").splitlines() or [""]
-    return "".join([f"data: {ln}\n" for ln in lines]) + "\n"
-
