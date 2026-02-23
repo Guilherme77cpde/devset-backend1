@@ -1686,13 +1686,22 @@ function applyTheme(theme){
   const t = theme === "light" ? "light" : "dark";
   document.documentElement.setAttribute("data-theme", t);
 }
-function getAPI(){
+function getConfiguredAPI(){
   return (state.prefs?.api || defaultPrefs().api).trim();
 }
 function getAPIBase(){
-  const api = getAPI();
-  // remove trailing /chat_stream if present, then strip trailing slashes
+  const api = getConfiguredAPI();
+  // Aceita base OU endpoint completo salvo em prefs.
+  // Sempre retorna apenas a base, sem /chat_stream e sem barra final.
   return api.replace(/\/chat_stream\/?$/i, "").replace(/\/+$/i, "");
+}
+function getChatStreamURL(){
+  const base = getAPIBase();
+  return base + "/chat_stream";
+}
+function getAPI(){
+  // Compatibilidade: qualquer chamada a getAPI() recebe SEMPRE o endpoint correto de chat.
+  return getChatStreamURL();
 }
 function getModel(){
   const m = (state.prefs?.model || "").trim();
@@ -3012,7 +3021,7 @@ async function sendCore(text){
   let gotFirstToken = false;
 
   try{
-    const API = getAPI();
+    const API = getChatStreamURL();
     const model = getModel();
     const countImgs = attached.filter(a=>a.isImage).length;
     log("Enviando… file_ids=" + file_ids.length + " images=" + countImgs);
