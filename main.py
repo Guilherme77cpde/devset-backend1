@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import AsyncGenerator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -14,14 +14,19 @@ class ChatRequest(BaseModel):
 
 app = FastAPI(title="Devset IA API")
 
-frontend_origin = "https://devset-backend1-production.up.railway.app"
+# ✅ CORS 100% liberado (sem cookies/login)
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=".*",
-    allow_origins=[frontend_origin],
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ✅ responde qualquer preflight
+@app.options("/{path:path}")
+async def preflight(path: str):
+    return Response(status_code=204)
 
 
 @app.get("/")
@@ -29,6 +34,7 @@ async def root() -> dict:
     return {
         "ok": True,
         "service": "Devset IA",
+        "version": "cors-v2",
         "ts": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -41,10 +47,7 @@ async def health() -> dict[str, str]:
 @app.post("/chat")
 async def chat(payload: ChatRequest) -> dict[str, str]:
     chosen_model = payload.model or "devset-sim"
-    return {
-        "reply": f"Você disse: {payload.message}",
-        "model_used": chosen_model,
-    }
+    return {"reply": f"Você disse: {payload.message}", "model_used": chosen_model}
 
 
 async def sse_tokens(message: str) -> AsyncGenerator[str, None]:
