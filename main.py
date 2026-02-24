@@ -1,81 +1,68 @@
-import os
-import logging
-import asyncio
-from fastapi import FastAPI, Request
+from datetime import datetime, timezone
+from typing import AsyncGenerator
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from database import engine, Base
-from routers import auth_router, chat_router, upload_router
-# ensure models are imported so SQLAlchemy metadata is populated
-import models  # noqa: F401
-
-logger = logging.getLogger("uvicorn.error")
+from pydantic import BaseModel
 
 
-def parse_origins(env_value: str | None) -> list[str]:
-    if not env_value:
-        return []
-    parts = [s.strip() for s in env_value.split(",") if s.strip()]
-    # do not accept wildcard when credentials are required
-    return [p for p in parts if p != "*"]
+class ChatRequest(BaseModel):
+    message: str
+    model: str | None = None
 
 
-app = FastAPI(title="Devset Backend")
+app = FastAPI(title="Devset IA API")
 
-# configure CORS: read ALLOW_ORIGINS from env (comma separated)
-# Recommended origin for deployment on Railway:
-# https://devset-backend1-production-0b6f.up.railway.app
-origins = parse_origins(os.getenv("ALLOW_ORIGINS")) or [
-    "https://devset-backend1-production-0b6f.up.railway.app",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
-
+frontend_origin = "https://devset-backend1-production.up.railway.app"
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origin_regex=".*",
+    allow_origins=[frontend_origin],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-@app.on_event("startup")
-async def on_startup():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-
-# include routers implemented in routers/ package
-app.include_router(auth_router)
-app.include_router(chat_router)
-app.include_router(upload_router)
-
-
 @app.get("/")
-async def root():
-    return {"status": "ok"}
+async def root() -> dict:
+    return {
+        "ok": True,
+        "service": "Devset IA",
+        "ts": datetime.now(timezone.utc).isoformat(),
+    }
 
 
-def _sse_data(text: str) -> str:
-    lines = (text or "").splitlines() or [""]
-    return "".join([f"data: {ln}\n" for ln in lines]) + "\n"
+@app.get("/health")
+async def health() -> dict[str, str]:
+    return {"status": "healthy"}
+
+
+@app.post("/chat")
+async def chat(payload: ChatRequest) -> dict[str, str]:
+    chosen_model = payload.model or "devset-sim"
+    return {
+        "reply": f"Você disse: {payload.message}",
+        "model_used": chosen_model,
+    }
+
+
+async def sse_tokens(message: str) -> AsyncGenerator[str, None]:
+    content = f"Você disse: {message}"
+    for token in content.split(" "):
+        yield f"event: token\ndata: {token} \n\n"
+    yield "event: done\ndata: [DONE]\n\n"
 
 
 @app.post("/chat_stream")
-async def chat_stream(request: Request):
-    try:
-        payload = await request.json()
-    except Exception:
-        payload = {}
-    message = (payload.get("message") if isinstance(payload, dict) else None) or ""
-
-    async def generator():
-        yield _sse_data("[START]").encode("utf-8")
-        await asyncio.sleep(0.05)
-        for chunk in ["Thinking.", "Thinking..", "Thinking...", f"Echo: {message}"]:
-            yield _sse_data(chunk).encode("utf-8")
-            await asyncio.sleep(0.05)
-        yield _sse_data("[DONE]").encode("utf-8")
-
-    return StreamingResponse(generator(), media_type="text/event-stream")
+async def chat_stream(payload: ChatRequest) -> StreamingResponse:
+    headers = {
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+    }
+    return StreamingResponse(
+        sse_tokens(payload.message),
+        media_type="text/event-stream",
+        headers=headers,
+    )
